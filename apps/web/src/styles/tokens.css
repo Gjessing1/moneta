@@ -1,0 +1,72 @@
+/*
+ * Moneta's design tokens. Cool receipt-paper grey, violet-black "thermal ink"
+ * text, and one cobalt accent kept for Capture and primary actions.
+ * data-theme is set before first paint (index.html) and then by theme.ts.
+ */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --paper: #f3f4f1;
+  --surface: #ffffff;
+  --ink: #23212f;
+  --muted: #676573;
+  --faint: #a3a1ac;
+  --line: #e1e2dd;
+  --track: #e6e7e2;
+  --badge: #edeee9;
+  --chosen: #ffffff;
+  --accent: #2a44c4;
+  --accent-text: #2a44c4;
+  --on-accent: #ffffff;
+  --accent-disabled: #a9b3e3;
+  --due: #8f4b00;
+  --due-soft: #fbebd5;
+  --danger: #b3261e;
+  --good: #1f6b45;
+  --focus: #2a44c4;
+  --shadow-float: 0 2px 10px rgb(20 18 40 / 8%);
+  --shadow-chosen: 0 1px 2px rgb(20 18 40 / 14%);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --paper: #15141b;
+  --surface: #1d1c25;
+  --ink: #edecf3;
+  --muted: #a3a1b0;
+  --faint: #6c6a78;
+  --line: #2e2d38;
+  --track: #24232d;
+  --badge: #282731;
+  --chosen: #3a3947;
+  --accent: #93a4ff;
+  --accent-text: #a9b7ff;
+  --on-accent: #10132b;
+  --accent-disabled: #3d4474;
+  --due: #f2b46b;
+  --due-soft: #3a2a14;
+  --danger: #ff8a80;
+  --good: #7fd4a4;
+  --focus: #a9b7ff;
+  --shadow-float: 0 2px 10px rgb(0 0 0 / 35%);
+  --shadow-chosen: 0 1px 2px rgb(0 0 0 / 40%);
+}
+
+:root {
+  --font: 'Schibsted Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius-list: 14px;
+  --radius-control: 12px;
+  --radius-chip: 8px;
+  --touch: 44px;
+
+  /* Capacitor supplies --safe-area-inset-* on Android; env() covers installed
+     PWAs and iOS. */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+
+  --nav-height: 64px;
+  --dock-height: 64px;
+  --rail-width: 96px;
+}

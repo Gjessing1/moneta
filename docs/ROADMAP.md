@@ -37,11 +37,6 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] App frame, mobile first, following the design canvas (see DESIGN.md): bottom navigation
-      (Archive · Capture · Settings) with the search field docked just above it on the phone and at
-      the top on desktop, the archive's view tabs (Recent · Shops · Tags · Warranty; each view fills
-      in with its own item), a design-token theme with System/Light/Dark, and routes that deep links
-      and the Android shell can open (`/capture`, `/search`, `/settings`, `/d/:id`).
 - [ ] Archive list (the Recent view): one list across all sources, newest first, grouped by month.
       Each row shows merchant (or what was bought, once named), amount, date, kind and source, and
       the list scrolls smoothly past a few thousand items.
@@ -71,7 +66,9 @@ The shell goes in now, before the list of features grows, so every later item is
 on both surfaces from the start. See [ANDROID.md](ANDROID.md).
 
 - [ ] Capacitor shell (`android/`, `io.gjessing.moneta`): first-launch server URL prompt, SSO login
-      inside the WebView, back button through web history, system bars/insets, app icon. Camera
+      inside the WebView, back button through web history, system bars/insets, app icon. Check that
+      the search field docked at the bottom rises above the keyboard (the web app sets
+      `interactive-widget=resizes-content`; the activity needs `adjustResize`). Camera
       capture and upload from section 2 work unchanged inside it.
 - [ ] Caddy: exempt the PWA assets and `/api/app/{version,download}` from SSO (A11). This edits
       shared host infrastructure, so ask first, then reload Caddy.

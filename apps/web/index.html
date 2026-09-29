@@ -2,9 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#111827" />
+    <!-- resizes-content: the keyboard shrinks the layout, so the search field
+         docked at the bottom rises above it instead of hiding behind it. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#F3F4F1" />
     <title>Moneta</title>
+    <script>
+      // Paint the chosen theme before React loads, so a reload never flashes
+      // light in dark mode. Mirrors resolveTheme() in @moneta/core/theme and
+      // the storage key in src/theme.ts.
+      (function () {
+        var preference = 'system';
+        try {
+          preference = localStorage.getItem('moneta.theme') || 'system';
+        } catch (e) {}
+        var dark =
+          preference === 'dark' ||
+          (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', dark ? '#15141B' : '#F3F4F1');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

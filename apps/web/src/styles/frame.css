@@ -1,0 +1,260 @@
+/*
+ * The app frame. Phone: content, then the search dock and bottom bar fixed at
+ * the bottom where the thumb is. Wide screens: a side rail, and the search
+ * field moves to the top of the archive.
+ */
+
+.frame__main {
+  padding: var(--safe-top) var(--safe-right) 0 var(--safe-left);
+  /* Room for the dock and the bottom bar, so the last row is never hidden. */
+  padding-bottom: calc(var(--nav-height) + var(--dock-height) + var(--safe-bottom) + 24px);
+}
+
+.frame--search .frame__main {
+  padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 24px);
+}
+
+/* ---- Navigation: bottom bar ---- */
+
+.app-nav {
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding: 6px calc(12px + var(--safe-right)) var(--safe-bottom) calc(12px + var(--safe-left));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.frame--search .app-nav {
+  display: none;
+}
+
+.app-nav__brand {
+  display: none;
+}
+
+.app-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding-top: 6px;
+  color: var(--muted);
+}
+
+.app-nav__item[aria-current='page'] {
+  color: var(--ink);
+}
+
+.app-nav__label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.app-nav__item[aria-current='page'] .app-nav__label {
+  font-weight: 700;
+}
+
+.app-nav__item--capture {
+  margin-top: -22px;
+  padding-top: 0;
+}
+
+/* The camera shutter: Capture's button, and the one bold element in the UI. */
+.shutter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.shutter__ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--on-accent);
+  color: var(--on-accent);
+}
+
+/* ---- Search dock ---- */
+
+.search-dock {
+  position: fixed;
+  z-index: 9;
+  left: calc(12px + var(--safe-left));
+  right: calc(12px + var(--safe-right));
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 8px);
+}
+
+.search-dock--link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  box-shadow: var(--shadow-float);
+}
+
+.search-dock__placeholder {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.search-dock--form {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px calc(12px + var(--safe-right)) calc(10px + var(--safe-bottom))
+    calc(16px + var(--safe-left));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.search-field {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 48px;
+  padding: 0 4px 0 14px;
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  border: 2px solid var(--accent);
+  color: var(--muted);
+}
+
+.search-field__input {
+  flex-grow: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  /* 16px keeps mobile browsers from zooming in on focus. */
+  font-size: 16px;
+}
+
+.search-field__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* ---- Wide screens: side rail ---- */
+
+@media (min-width: 900px) {
+  :root {
+    --nav-height: 0px;
+    --dock-height: 0px;
+  }
+
+  .frame {
+    display: grid;
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+    min-height: 100dvh;
+  }
+
+  .frame__main {
+    padding: 0 32px 48px;
+  }
+
+  .app-nav,
+  .frame--search .app-nav {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    height: 100dvh;
+    padding: 24px 12px;
+    border-top: 0;
+    border-right: 1px solid var(--line);
+  }
+
+  .app-nav__brand {
+    display: block;
+    margin-bottom: 16px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .app-nav__item,
+  .app-nav__item--capture {
+    justify-content: center;
+    width: 72px;
+    min-height: 64px;
+    margin-top: 0;
+    padding: 6px 0;
+    border-radius: var(--radius-control);
+  }
+
+  .app-nav__item:hover {
+    color: var(--ink);
+  }
+
+  .app-nav__item[aria-current='page'] {
+    background: var(--badge);
+  }
+
+  .shutter {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .shutter__ring {
+    width: 28px;
+    height: 28px;
+    border-width: 1.5px;
+  }
+
+  .shutter__ring svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-dock,
+  .search-dock--form {
+    position: static;
+  }
+
+  .search-dock--link {
+    width: 320px;
+    height: 40px;
+    box-shadow: none;
+  }
+
+  .search-dock--form {
+    order: -1;
+    max-width: 720px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+}

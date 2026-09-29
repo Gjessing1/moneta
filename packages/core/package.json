@@ -12,6 +12,14 @@
     "./document": {
       "types": "./dist/document.d.ts",
       "default": "./dist/document.js"
+    },
+    "./routes": {
+      "types": "./dist/routes.d.ts",
+      "default": "./dist/routes.js"
+    },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "default": "./dist/theme.js"
     }
   }
 }
