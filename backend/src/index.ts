@@ -7,7 +7,7 @@ const config = loadConfig();
 // A6: the database lives in the data dir, so it survives redeploys.
 const db = openDatabase(join(config.dataDir, 'moneta.sqlite'));
 const migration = migrate(db);
-const app = await buildApp(config);
+const app = await buildApp(config, db);
 
 if (migration.from > migration.known) {
   // Additive migrations keep an older build working on a newer schema, which is

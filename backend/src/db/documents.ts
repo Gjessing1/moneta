@@ -1,7 +1,10 @@
 // Row mapping between the SQLite tables and the @moneta/core model. Column
 // names are snake_case in SQL and camelCase in the domain.
+import type { DocumentListQuery, DocumentPage } from '@moneta/core/document-list';
+import { encodeListCursor } from '@moneta/core/document-list';
 import type {
   ArchiveDocument,
+  DocumentDetail,
   DocumentFile,
   DocumentKind,
   DocumentSource,
@@ -21,7 +24,6 @@ interface DocumentRow {
   kid: string | null;
   account: string | null;
   iban: string | null;
-  paid_at: string | null;
   notes: string;
   dedup_key: string | null;
   guessed: string;
@@ -56,7 +58,6 @@ function toDocument(row: DocumentRow): ArchiveDocument {
     kid: row.kid,
     account: row.account,
     iban: row.iban,
-    paidAt: row.paid_at,
     notes: row.notes,
     dedupKey: row.dedup_key,
     guessed: JSON.parse(row.guessed) as GuessableField[],
@@ -85,11 +86,11 @@ export function insertDocument(db: Db, doc: ArchiveDocument): void {
   db.prepare(
     `INSERT INTO documents (
        id, source, kind, merchant, amount_minor, currency, issued_on, due_on,
-       kid, account, iban, paid_at, notes, dedup_key, guessed,
+       kid, account, iban, notes, dedup_key, guessed,
        captured_at, created_at, updated_at, deleted_at
      ) VALUES (
        @id, @source, @kind, @merchant, @amountMinor, @currency, @issuedOn, @dueOn,
-       @kid, @account, @iban, @paidAt, @notes, @dedupKey, @guessed,
+       @kid, @account, @iban, @notes, @dedupKey, @guessed,
        @capturedAt, @createdAt, @updatedAt, @deletedAt
      )`,
   ).run({ ...doc, guessed: JSON.stringify(doc.guessed) });
@@ -101,6 +102,71 @@ export function getDocument(db: Db, id: string): ArchiveDocument | undefined {
     return undefined;
   }
   return toDocument(row);
+}
+
+export function getDocumentDetail(db: Db, id: string): DocumentDetail | undefined {
+  const document = getDocument(db, id);
+  if (document === undefined) {
+    return undefined;
+  }
+  return { document, files: listFiles(db, id) };
+}
+
+// Writes every mutable column. The identity columns (source, dedup key,
+// timestamps of capture and creation) never change after insert.
+export function updateDocument(db: Db, doc: ArchiveDocument): void {
+  db.prepare(
+    `UPDATE documents SET
+       kind = @kind, merchant = @merchant, amount_minor = @amountMinor,
+       currency = @currency, issued_on = @issuedOn, due_on = @dueOn, kid = @kid,
+       account = @account, iban = @iban, notes = @notes, guessed = @guessed,
+       updated_at = @updatedAt, deleted_at = @deletedAt
+     WHERE id = @id`,
+  ).run({ ...doc, guessed: JSON.stringify(doc.guessed) });
+}
+
+// Newest first. The ORDER BY must match documentSortKey in @moneta/core, which
+// writes the cursor this query resumes from.
+export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
+  const conditions: string[] = [];
+  const params: Record<string, string | number> = { limit: query.limit + 1 };
+  if (query.deleted) {
+    conditions.push('deleted_at IS NOT NULL');
+  } else {
+    conditions.push('deleted_at IS NULL');
+  }
+  if (query.kind !== null) {
+    conditions.push('kind = @kind');
+    params.kind = query.kind;
+  }
+  if (query.source !== null) {
+    conditions.push('source = @source');
+    params.source = query.source;
+  }
+  if (query.after !== null) {
+    conditions.push('(COALESCE(issued_on, captured_at), id) < (@afterKey, @afterId)');
+    params.afterKey = query.after.sortKey;
+    params.afterId = query.after.id;
+  }
+  const rows = db
+    .prepare(
+      `SELECT * FROM documents WHERE ${conditions.join(' AND ')}
+       ORDER BY COALESCE(issued_on, captured_at) DESC, id DESC
+       LIMIT @limit`,
+    )
+    .all(params) as DocumentRow[];
+
+  // One row more than asked for tells whether another page exists.
+  const items: ArchiveDocument[] = [];
+  for (const row of rows.slice(0, query.limit)) {
+    items.push(toDocument(row));
+  }
+  let nextCursor: string | null = null;
+  const last = items[items.length - 1];
+  if (rows.length > query.limit && last !== undefined) {
+    nextCursor = encodeListCursor(last);
+  }
+  return { items, nextCursor };
 }
 
 export function insertFile(db: Db, file: DocumentFile): void {
@@ -124,4 +190,36 @@ export function listFiles(db: Db, documentId: string): DocumentFile[] {
     files.push(toFile(row));
   }
   return files;
+}
+
+export function getFile(db: Db, documentId: string, position: number): DocumentFile | undefined {
+  const row = db
+    .prepare('SELECT * FROM files WHERE document_id = ? AND position = ?')
+    .get(documentId, position) as FileRow | undefined;
+  if (row === undefined) {
+    return undefined;
+  }
+  return toFile(row);
+}
+
+// A12: the same bytes uploaded again to the same document are a retry.
+export function findFileByHash(
+  db: Db,
+  documentId: string,
+  sha256: string,
+): DocumentFile | undefined {
+  const row = db
+    .prepare('SELECT * FROM files WHERE document_id = ? AND sha256 = ? ORDER BY position LIMIT 1')
+    .get(documentId, sha256) as FileRow | undefined;
+  if (row === undefined) {
+    return undefined;
+  }
+  return toFile(row);
+}
+
+export function nextFilePosition(db: Db, documentId: string): number {
+  const row = db
+    .prepare('SELECT COALESCE(MAX(position) + 1, 0) AS next FROM files WHERE document_id = ?')
+    .get(documentId) as { next: number };
+  return row.next;
 }

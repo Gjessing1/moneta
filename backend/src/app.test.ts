@@ -4,11 +4,12 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
+import { openDatabase } from './db/database.js';
 
 describe('GET /api/health', () => {
   it('reports the build it runs', async () => {
     const config = loadConfig({ GIT_SHA: 'abc123', LOG_LEVEL: 'silent' });
-    const app = await buildApp({ ...config, webRoot: '/nonexistent' });
+    const app = await buildApp({ ...config, webRoot: '/nonexistent' }, openDatabase(':memory:'));
     const res = await app.inject({ method: 'GET', url: '/api/health' });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ ok: true, name: 'moneta', gitSha: 'abc123' });
@@ -21,7 +22,7 @@ describe('serving the web app', () => {
     const webRoot = mkdtempSync(join(tmpdir(), 'moneta-web-'));
     writeFileSync(join(webRoot, 'index.html'), '<!doctype html><title>Moneta</title>');
     const config = loadConfig({ LOG_LEVEL: 'silent' });
-    const app = await buildApp({ ...config, webRoot });
+    const app = await buildApp({ ...config, webRoot }, openDatabase(':memory:'));
     try {
       for (const url of ['/capture', '/d/4f1c2b', '/search?q=kiwi', '/warranty']) {
         const res = await app.inject({ method: 'GET', url });

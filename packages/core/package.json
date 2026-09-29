@@ -13,6 +13,18 @@
       "types": "./dist/document.d.ts",
       "default": "./dist/document.js"
     },
+    "./document-list": {
+      "types": "./dist/document-list.d.ts",
+      "default": "./dist/document-list.js"
+    },
+    "./document-patch": {
+      "types": "./dist/document-patch.d.ts",
+      "default": "./dist/document-patch.js"
+    },
+    "./document-upload": {
+      "types": "./dist/document-upload.d.ts",
+      "default": "./dist/document-upload.js"
+    },
     "./routes": {
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"

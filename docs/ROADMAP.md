@@ -19,18 +19,12 @@ Open work only. **This file is committed to git**, so its history records what s
 
 Unsorted ideas and bugs. Triage them into a section below.
 
-- Drop `paidAt` from `ArchiveDocument` and the document API: Moneta doesn't track payments. The
-  `paid_at` column stays, because migrations are append-only and additive.
-
 ---
 
 ## 1. Foundation: storage and the maily contract
 
 Nothing here is visible to users. It fixes the decisions everything else builds on.
 
-- [ ] Document API: `PUT /api/documents/:uuid/file` (idempotent, A12), `GET /api/documents` (paged,
-      filtered), `GET /api/documents/:id`, `PATCH /api/documents/:id`, `DELETE` (soft delete that
-      can be undone for 30 days), and `GET /api/documents/:id/file/:n` streamed from the data dir.
 - [ ] Add `/home/gjessing/data/moneta` to the nightly backups (SQLite via `.backup`, originals as
       files) and write down how in DEPLOYMENT.md. This must be done before the first real document
       is stored.
@@ -49,7 +43,9 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
       `guessed` list).
 - [ ] Delete and restore: delete from the document (with a confirmation) or from a multi-select,
       then an undo bar. Settings › Recently deleted lists them with Restore and "Delete now"; they
-      are purged after 30 days. A deleted maily document is never imported again.
+      are purged after 30 days. A deleted maily document is never imported again. The purge job
+      also removes originals that no `files` row references (A15), e.g. left by a crash between
+      storing the bytes and inserting the row. The soft delete and restore API already exist.
 - [ ] Manual upload: pick or drop one or more PDFs/images and file them. On desktop this is the
       fallback for anything maily missed.
 - [ ] Camera capture: the Capture tab opens the rear camera in one tap (`capture="environment"`).

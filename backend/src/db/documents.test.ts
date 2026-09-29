@@ -18,7 +18,6 @@ function receipt(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     kid: '1234567890123',
     account: '1234.56.78903',
     iban: null,
-    paidAt: null,
     notes: '',
     dedupKey: 'maily:42',
     guessed: ['merchant', 'amountMinor', 'dueOn'],

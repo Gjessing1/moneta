@@ -40,7 +40,6 @@ export interface ArchiveDocument {
   kid: string | null;
   account: string | null;
   iban: string | null;
-  paidAt: string | null;
   notes: string;
   // Unique per upstream item, e.g. `maily:<messageId>` (A8). Null for captures
   // and uploads, which are deduplicated on `id` instead (A12).
@@ -67,6 +66,41 @@ export interface DocumentFile {
   fileName: string | null;
   mailyAttachmentId: string | null;
   createdAt: string;
+}
+
+// The outcome of checking untrusted input (a request body, a query string).
+export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
+// What GET /api/documents/:id and every call that changes one document return.
+export interface DocumentDetail {
+  document: ArchiveDocument;
+  files: DocumentFile[];
+}
+
+// Originals the archive accepts and serves inline. SVG and HTML are left out on
+// purpose: served from the app's own origin they could run script.
+export const STORABLE_CONTENT_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+] as const;
+
+// A phone photo is a few MB and a long PDF invoice rarely passes 10 MB.
+export const MAX_ORIGINAL_BYTES = 50 * 1024 * 1024;
+
+export function isStorableContentType(value: string): boolean {
+  return STORABLE_CONTENT_TYPES.some(function matches(type) {
+    return type === value;
+  });
+}
+
+// Canonical lowercase UUID, as crypto.randomUUID() writes it. One spelling per
+// id keeps a retried capture (A12) from becoming a second document.
+export function isDocumentId(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value);
 }
 
 export function mailyDedupKey(messageId: string): string {
