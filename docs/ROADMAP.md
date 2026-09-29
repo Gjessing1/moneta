@@ -19,6 +19,9 @@ Open work only. **This file is committed to git**, so its history records what s
 
 Unsorted ideas and bugs. Triage them into a section below.
 
+- Drop `paidAt` from `ArchiveDocument` and the document API: Moneta doesn't track payments. The
+  `paid_at` column stays, because migrations are append-only and additive.
+
 ---
 
 ## 1. Foundation: storage and the maily contract
@@ -34,13 +37,24 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] App frame, mobile first: bottom navigation (Archive · Capture · Settings; Unpaid joins in
-      section 4), a design-token theme with light/dark, and routes that deep links and the Android
-      shell can open (`/capture`, `/d/:id`).
-- [ ] Archive list: one list across all sources, newest first. Each row shows merchant, amount,
-      date, kind, source and paid state, and the list scrolls smoothly past a few thousand items.
+- [ ] App frame, mobile first, following the design canvas (see DESIGN.md): bottom navigation
+      (Archive · Capture · Settings) with the search field docked just above it on the phone and at
+      the top on desktop, the archive's view tabs (Recent · Shops · Tags · Warranty; each view fills
+      in with its own item), a design-token theme with System/Light/Dark, and routes that deep links
+      and the Android shell can open (`/capture`, `/search`, `/settings`, `/d/:id`).
+- [ ] Archive list (the Recent view): one list across all sources, newest first, grouped by month.
+      Each row shows merchant (or what was bought, once named), amount, date, kind and source, and
+      the list scrolls smoothly past a few thousand items.
 - [ ] Document view: the original rendered inline (PDF pages and images, pinch zoom on the phone),
-      the facts beside or below it, and inline editing of every field. Download the original.
+      the facts beside or below it, and a Source block that says where it came from (sender and
+      date, with a link that opens the mail in maily) and that the original is stored in Moneta
+      (file name, size, date saved). Download or share the original.
+- [ ] Edit details: one form for every field, plus an optional "what you bought" field (searchable,
+      shown in the Warranty view). Fields read from mail or OCR carry a marker until saved (the
+      `guessed` list).
+- [ ] Delete and restore: delete from the document (with a confirmation) or from a multi-select,
+      then an undo bar. Settings › Recently deleted lists them with Restore and "Delete now"; they
+      are purged after 30 days. A deleted maily document is never imported again.
 - [ ] Manual upload: pick or drop one or more PDFs/images and file them. On desktop this is the
       fallback for anything maily missed.
 - [ ] Camera capture: the Capture tab opens the rear camera in one tap (`capture="environment"`).
@@ -64,8 +78,10 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
 - [ ] Release pipeline: keystore at `~/.config/moneta/keystore.env`, `/api/app/version` and
       `/api/app/download` served from `MONETA_DATA_DIR/app/`, and `scripts/release-android.sh`
       modelled on nodecal's (build signed → publish → check live version → download → compare
-      SHA-256). The web app shows a download link in a normal browser and an "update available"
-      banner inside an outdated shell.
+      SHA-256). Settings › Updates shows the web version and the APK version, an Update button when a
+      newer APK is published, and "Check for updates"; the web app also notices a newer deploy
+      (`/api/health` gitSha) and offers a reload. In a normal browser Settings links to the APK
+      download instead.
 - [ ] Share target: "Share → Moneta" for PDFs and images from any app (one or many files) lands in
       the capture flow, pre-filled with the file name. Native code only hands over bytes (A11).
 - [ ] Launcher shortcut: long-press the icon → "Capture receipt", which opens straight into the
@@ -73,17 +89,19 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
 - [ ] Android e2e harness in `apps/android/e2e/` on the `atlas_test` AVD: launch, log in, capture
       (emulated camera), share a PDF in, and see both in the archive. Write its README first.
 
-## 4. Find and act
+## 4. Find
 
-- [ ] Search: one box across merchant, notes, amounts ("499", "499,50"), dates ("mars 2026") and the
+- [ ] Search: one box (bottom of the screen on the phone) across merchant, what was bought, notes, amounts ("499", "499,50"), dates ("mars 2026") and the
       document text (the PDF text layer, maily's body text, OCR text once section 5 lands). Uses
       SQLite FTS5; results arrive while typing.
-- [ ] Filters: kind, source, paid/unpaid, date range and amount range. Filters are stored in the
-      URL, so a filtered view can be bookmarked or shared to the app.
-- [ ] Unpaid view: open invoices sorted by due date, with overdue ones marked, KID/account copyable
-      in one tap, and "mark paid" (with an undo). maily's payment facts pre-fill it.
+- [ ] Filters: kind, source, shop, date range and amount range, as chips above the search box.
+      Filters are stored in the URL, so a filtered view can be bookmarked or shared to the app.
+- [ ] Shops view: every merchant with its document count and latest date, most used first, then A
+      to Z. Opening one lists its documents.
 - [ ] Tags/categories: a free-form tag per document (e.g. `bolig`, `bil`, `jobb`), filterable, with
-      suggestions from the merchant's earlier tags.
+      suggestions from the merchant's earlier tags. The Tags view lists them with counts; Settings ›
+      Tags renames, merges and removes them.
+- [ ] Select several: long-press enters select mode; tag, export or delete the selection.
 
 ## 5. Capture quality
 
@@ -104,13 +122,9 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
       `YYYY-MM-DD merchant amount.ext`, and a CSV of the facts. On Android the ZIP goes to the
       system share sheet or Downloads.
 - [ ] Warranty: mark a receipt as a warranty item (default 5 years for goods under Norwegian
-      consumer law, 2 for cheap items), list items by expiry, and show the soonest to expire on the
-      archive.
+      consumer law, 2 for cheap items, set in Settings). The Warranty view lists items by what was
+      bought, covered ones by end date, then expired ones.
 
 ## Later / maybe
 
-- [ ] Due-date reminders on the phone through ntfy, which is already on the host. This avoids
-      per-device tokens (A11).
-- [ ] Link from a Moneta item back to the message in maily (maily deep links use its internal UUID).
 - [ ] Yearly overview: spend per tag/merchant per month, for the tax season.
-- [ ] Bulk edit: tag, mark paid or delete many documents at once.
