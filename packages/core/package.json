@@ -25,6 +25,10 @@
       "types": "./dist/document-patch.d.ts",
       "default": "./dist/document-patch.js"
     },
+    "./document-view": {
+      "types": "./dist/document-view.d.ts",
+      "default": "./dist/document-view.js"
+    },
     "./document-upload": {
       "types": "./dist/document-upload.d.ts",
       "default": "./dist/document-upload.js"
@@ -40,6 +44,10 @@
     "./theme": {
       "types": "./dist/theme.d.ts",
       "default": "./dist/theme.js"
+    },
+    "./zoom": {
+      "types": "./dist/zoom.d.ts",
+      "default": "./dist/zoom.js"
     }
   }
 }

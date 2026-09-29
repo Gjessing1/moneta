@@ -14,8 +14,8 @@ export async function buildApp(config: Config, db: Db) {
     return { ok: true, name: 'moneta', version: config.version, gitSha: config.gitSha };
   });
 
-  registerDocumentRoutes(app, db);
-  registerDocumentFileRoutes(app, db, config.dataDir);
+  registerDocumentRoutes(app, db, config.mailyPublicUrl);
+  registerDocumentFileRoutes(app, db, config.dataDir, config.mailyPublicUrl);
 
   if (existsSync(config.webRoot)) {
     await app.register(fastifyStatic, { root: config.webRoot });

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { DocumentSource } from '@moneta/core/document';
 
 // Hand-drawn 24px stroke icons; they take the text colour, so one set serves
 // both themes.
@@ -111,4 +112,90 @@ export function ShareIcon(props: IconProps) {
       <path d="m8.7 10.7 6.6-3.9M8.7 13.3l6.6 3.9" />
     </IconFrame>
   );
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M12 4.5v11M7.5 11 12 15.5 16.5 11M5 19.5h14" />
+    </IconFrame>
+  );
+}
+
+// Hands the file to another app (the system share sheet). Not ShareIcon, which
+// marks a document that arrived that way.
+export function SendOnIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M12 14.5V4M8 7.5 12 3.5l4 4M7 10.5H6a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 6 20.5h12a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5h-1" />
+    </IconFrame>
+  );
+}
+
+export function CopyIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <rect x="8.5" y="8.5" width="11" height="11" rx="2" />
+      <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
+    </IconFrame>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </IconFrame>
+  );
+}
+
+export function ExternalIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M9 5.5h9.5V15M18.5 5.5 6 18" />
+    </IconFrame>
+  );
+}
+
+// "Original stored in Moneta": the archive box with a tick.
+export function StoredIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <path d="M4.5 8h15v10.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5z" />
+      <path d="M3.5 4.5h17V8h-17z" />
+      <path d="m9.5 13.5 2 2 3.5-3.5" />
+    </IconFrame>
+  );
+}
+
+export function ZoomInIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4M8.5 11h5M11 8.5v5" />
+    </IconFrame>
+  );
+}
+
+export function ZoomOutIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4M8.5 11h5" />
+    </IconFrame>
+  );
+}
+
+// How a document arrived: the badge in the archive list, the Source block.
+export function SourceIcon({ source, ...props }: IconProps & { source: DocumentSource }) {
+  switch (source) {
+    case 'maily':
+      return <MailIcon {...props} />;
+    case 'camera':
+      return <CameraIcon {...props} />;
+    case 'upload':
+      return <UploadIcon {...props} />;
+    case 'share':
+      return <ShareIcon {...props} />;
+  }
 }

@@ -58,4 +58,12 @@ export const MIGRATIONS: readonly string[] = [
     updated_at TEXT NOT NULL
   ) STRICT;
   `,
+  // Provenance for maily documents (the Source block): who sent the mail, its
+  // subject and when it arrived, copied from the export feed (A8, A14).
+  `
+  ALTER TABLE documents ADD COLUMN mail_from_name TEXT;
+  ALTER TABLE documents ADD COLUMN mail_from_address TEXT;
+  ALTER TABLE documents ADD COLUMN mail_subject TEXT;
+  ALTER TABLE documents ADD COLUMN mail_received_at TEXT;
+  `,
 ];

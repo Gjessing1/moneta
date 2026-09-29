@@ -12,6 +12,9 @@ export interface Config {
   version: string;
   // Built web app, served same-origin. Absent in dev (Vite serves the UI).
   webRoot: string;
+  // maily's address in the browser, for "open in maily" links. Not MAILY_URL:
+  // that one is the bridge address only containers can reach (A9).
+  mailyPublicUrl: string;
 }
 
 function readVersion(): string {
@@ -33,5 +36,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     gitSha: env.GIT_SHA ?? '',
     version: readVersion(),
     webRoot: resolve(env.MONETA_WEB_ROOT ?? new URL('../public', import.meta.url).pathname),
+    mailyPublicUrl: (env.MAILY_PUBLIC_URL ?? '').replace(/\/+$/, ''),
   };
 }

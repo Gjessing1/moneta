@@ -35,7 +35,12 @@ interface ErrorBody {
   error: string;
 }
 
-export function registerDocumentFileRoutes(app: FastifyInstance, db: Db, dataDir: string): void {
+export function registerDocumentFileRoutes(
+  app: FastifyInstance,
+  db: Db,
+  dataDir: string,
+  mailyPublicUrl: string,
+): void {
   // Hand the raw request stream to the handler, so an upload is hashed and
   // written to disk as it arrives instead of buffered in memory (A15).
   app.addContentTypeParser(
@@ -109,7 +114,7 @@ export function registerDocumentFileRoutes(app: FastifyInstance, db: Db, dataDir
       if (created) {
         reply.code(201);
       }
-      return getDocumentDetail(db, id) as DocumentDetail;
+      return getDocumentDetail(db, id, mailyPublicUrl) as DocumentDetail;
     },
   );
 

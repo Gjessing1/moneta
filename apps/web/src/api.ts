@@ -1,3 +1,4 @@
+import type { DocumentDetail } from '@moneta/core/document';
 import type { DocumentPage } from '@moneta/core/document-list';
 
 // A failed API call, carrying the server's own explanation when it sent one.
@@ -33,6 +34,15 @@ export function fetchDocumentPage(after: string | null): Promise<DocumentPage> {
     path = `${path}?after=${encodeURIComponent(after)}`;
   }
   return request<DocumentPage>(path);
+}
+
+export function fetchDocument(id: string): Promise<DocumentDetail> {
+  return request<DocumentDetail>(`/api/documents/${encodeURIComponent(id)}`);
+}
+
+// Where a stored original is served; the position is its page order.
+export function fileUrl(documentId: string, position: number): string {
+  return `/api/documents/${encodeURIComponent(documentId)}/file/${position}`;
 }
 
 export function describeError(err: unknown): string {

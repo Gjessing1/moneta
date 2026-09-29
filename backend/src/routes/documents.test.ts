@@ -26,12 +26,12 @@ afterEach(async () => {
   }
 });
 
-async function setup() {
+async function setup(env: Record<string, string> = {}) {
   const dataDir = mkdtempSync(join(tmpdir(), 'moneta-api-'));
   dirs.push(dataDir);
   const db = openDatabase(':memory:');
   migrate(db);
-  const config = loadConfig({ LOG_LEVEL: 'silent', MONETA_DATA_DIR: dataDir });
+  const config = loadConfig({ LOG_LEVEL: 'silent', MONETA_DATA_DIR: dataDir, ...env });
   const app = await buildApp({ ...config, webRoot: '/nonexistent' }, db);
   open.push(app);
   return { app, db, dataDir };
@@ -61,6 +61,7 @@ function stored(overrides: Partial<ArchiveDocument>): ArchiveDocument {
     createdAt: '2026-09-02T08:00:00.000Z',
     updatedAt: '2026-09-02T08:00:00.000Z',
     deletedAt: null,
+    mail: null,
     ...overrides,
   };
 }
@@ -351,6 +352,30 @@ describe('PATCH /api/documents/:id', () => {
       payload: { notes: 'x' },
     });
     expect(res.statusCode).toBe(404);
+  });
+});
+
+describe('GET /api/documents/:id', () => {
+  it('links a maily document to its mail when maily has a public address', async () => {
+    const { app, db } = await setup({ MAILY_PUBLIC_URL: 'https://mail.example/' });
+    insertDocument(db, stored({ dedupKey: 'maily:4f2a' }));
+    const res = await app.inject({ method: 'GET', url: `/api/documents/${ID}` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json<DocumentDetail>().mailUrl).toBe('https://mail.example/m/4f2a');
+  });
+
+  it('has no mail link when the address is not configured', async () => {
+    const { app, db } = await setup();
+    insertDocument(db, stored({ dedupKey: 'maily:4f2a' }));
+    const res = await app.inject({ method: 'GET', url: `/api/documents/${ID}` });
+    expect(res.json<DocumentDetail>()).toMatchObject({ files: [], mailUrl: null });
+  });
+
+  it('answers 404 for an unknown document', async () => {
+    const { app } = await setup();
+    const res = await app.inject({ method: 'GET', url: `/api/documents/${ID}` });
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toEqual({ error: 'no document with that id' });
   });
 });
 

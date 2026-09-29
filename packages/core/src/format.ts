@@ -73,6 +73,34 @@ export function localDate(timestamp: string, timeZone: string): string {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+// "2026-09-25T04:12:00Z" in Europe/Oslo → "25 Sep 2026, 06:12". A 24-hour
+// clock, as Norwegian receipts print it.
+export function formatDateTime(timestamp: string, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(timestamp));
+  const values: Record<string, string> = {};
+  for (const part of parts) {
+    values[part.type] = part.value;
+  }
+  return `${formatDayLong(localDate(timestamp, timeZone))}, ${values.hour}:${values.minute}`;
+}
+
+// File sizes as a file manager shows them: "812 bytes", "184 KB", "2.4 MB".
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} bytes`;
+  }
+  const kilobytes = bytes / 1024;
+  if (kilobytes < 1024) {
+    return `${Math.round(kilobytes)} KB`;
+  }
+  return `${(kilobytes / 1024).toFixed(1)} MB`;
+}
+
 function splitDate(date: string): { year: number; month: number; day: number } {
   const [year, month, day] = date.split('-');
   return { year: Number(year), month: Number(month), day: Number(day) };

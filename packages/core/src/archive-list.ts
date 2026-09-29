@@ -18,13 +18,13 @@ export interface MonthGroup {
   rows: ArchiveRow[];
 }
 
-const KIND_LABELS: Record<DocumentKind, string> = {
+export const KIND_LABELS: Record<DocumentKind, string> = {
   invoice: 'Invoice',
   receipt: 'Receipt',
   other: 'Document',
 };
 
-const SOURCE_PHRASES: Record<DocumentSource, string> = {
+export const SOURCE_PHRASES: Record<DocumentSource, string> = {
   maily: 'from mail',
   camera: 'photographed',
   upload: 'uploaded',
@@ -41,12 +41,17 @@ export function documentDay(doc: ArchiveDocument, timeZone: string): string {
   return localDate(doc.capturedAt, timeZone);
 }
 
+// The merchant, or what the document is while it has none yet.
+export function documentTitle(doc: ArchiveDocument): string {
+  if (doc.merchant === null) {
+    return `${KIND_LABELS[doc.kind]} awaiting details`;
+  }
+  return doc.merchant;
+}
+
 export function describeDocument(doc: ArchiveDocument, timeZone: string): ArchiveRow {
   const kind = KIND_LABELS[doc.kind];
-  let title = doc.merchant;
-  if (title === null) {
-    title = `${kind} awaiting details`;
-  }
+  const title = documentTitle(doc);
   let amount: string | null = null;
   if (doc.amountMinor !== null && doc.currency !== null) {
     amount = formatAmount(doc.amountMinor, doc.currency);

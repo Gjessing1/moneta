@@ -18,7 +18,7 @@ interface ErrorBody {
 
 const NOT_FOUND: ErrorBody = { error: 'no document with that id' };
 
-export function registerDocumentRoutes(app: FastifyInstance, db: Db): void {
+export function registerDocumentRoutes(app: FastifyInstance, db: Db, mailyPublicUrl: string): void {
   app.get('/api/documents', async function list(request, reply): Promise<DocumentPage | ErrorBody> {
     const parsed = parseDocumentListQuery(request.query as Record<string, unknown>);
     if (!parsed.ok) {
@@ -32,7 +32,7 @@ export function registerDocumentRoutes(app: FastifyInstance, db: Db): void {
   app.get<{ Params: IdParams }>('/api/documents/:id', async function read(request, reply): Promise<
     DocumentDetail | ErrorBody
   > {
-    const detail = getDocumentDetail(db, request.params.id);
+    const detail = getDocumentDetail(db, request.params.id, mailyPublicUrl);
     if (detail === undefined) {
       return reply.code(404).send(NOT_FOUND);
     }
@@ -55,7 +55,7 @@ export function registerDocumentRoutes(app: FastifyInstance, db: Db): void {
         return reply.code(400).send({ error: next.error });
       }
       updateDocument(db, next.value);
-      return getDocumentDetail(db, doc.id) as DocumentDetail;
+      return getDocumentDetail(db, doc.id, mailyPublicUrl) as DocumentDetail;
     },
   );
 
@@ -72,7 +72,7 @@ export function registerDocumentRoutes(app: FastifyInstance, db: Db): void {
         const now = new Date().toISOString();
         updateDocument(db, { ...doc, deletedAt: now, updatedAt: now });
       }
-      return getDocumentDetail(db, doc.id) as DocumentDetail;
+      return getDocumentDetail(db, doc.id, mailyPublicUrl) as DocumentDetail;
     },
   );
 
@@ -86,7 +86,7 @@ export function registerDocumentRoutes(app: FastifyInstance, db: Db): void {
       if (doc.deletedAt !== null) {
         updateDocument(db, { ...doc, deletedAt: null, updatedAt: new Date().toISOString() });
       }
-      return getDocumentDetail(db, doc.id) as DocumentDetail;
+      return getDocumentDetail(db, doc.id, mailyPublicUrl) as DocumentDetail;
     },
   );
 }

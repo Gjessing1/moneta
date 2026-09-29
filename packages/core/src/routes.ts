@@ -13,6 +13,9 @@ export type Route =
   | { name: 'capture' }
   | { name: 'settings' }
   | { name: 'document'; id: string }
+  // The document's original full screen, for pinch zoom. A route of its own so
+  // the back button (the browser's, and Android's through history) closes it.
+  | { name: 'original'; id: string }
   | { name: 'notFound'; path: string };
 
 // Top-level destinations, in navigation order.
@@ -43,9 +46,13 @@ export function parseRoute(pathname: string, search: string): Route {
     return { name: 'settings' };
   }
 
-  const documentMatch = /^\/d\/([^/]+)$/.exec(path);
+  const documentMatch = /^\/d\/([^/]+)(\/original)?$/.exec(path);
   if (documentMatch?.[1]) {
-    return { name: 'document', id: decodeURIComponent(documentMatch[1]) };
+    const id = decodeURIComponent(documentMatch[1]);
+    if (documentMatch[2] !== undefined) {
+      return { name: 'original', id };
+    }
+    return { name: 'document', id };
   }
   return { name: 'notFound', path };
 }
@@ -65,6 +72,8 @@ export function routePath(route: Route): string {
       return '/settings';
     case 'document':
       return `/d/${encodeURIComponent(route.id)}`;
+    case 'original':
+      return `/d/${encodeURIComponent(route.id)}/original`;
     case 'notFound':
       return route.path;
   }
@@ -77,6 +86,7 @@ export function sectionOf(route: Route): Section | null {
     case 'archive':
     case 'search':
     case 'document':
+    case 'original':
       return 'archive';
     case 'capture':
       return 'capture';

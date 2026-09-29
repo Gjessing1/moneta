@@ -118,5 +118,6 @@ export function newUploadedDocument(
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
+    mail: null,
   };
 }

@@ -1,0 +1,429 @@
+/*
+ * One document. Phone: the original, then facts and source, with download and
+ * share in a bar at the thumb. Wide screens: the original on the left and
+ * everything else in a column beside it.
+ */
+
+.document {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  padding: 0 16px;
+}
+
+.document__header {
+  align-items: flex-start;
+}
+
+.document__header .icon-button {
+  margin-top: -8px;
+}
+
+.document__titles {
+  flex-grow: 1;
+  min-width: 0;
+  padding-top: 0;
+  overflow-wrap: anywhere;
+}
+
+.document__subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.document__deleted {
+  padding: 10px 14px;
+  border-radius: var(--radius-control);
+  background: var(--due-soft);
+  color: var(--due);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---- The original's pages ---- */
+
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.original {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.pages--inline .original + .original {
+  margin-top: 4px;
+}
+
+.page {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  /* Paper stays white in dark mode too: it is a picture of paper. */
+  background: #ffffff;
+  cursor: zoom-in;
+}
+
+.pages--inline .page + .page {
+  margin-top: -4px;
+}
+
+.page--loading {
+  aspect-ratio: 1 / 1.414;
+  cursor: default;
+}
+
+.page__canvas,
+.page__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.page__image {
+  height: auto;
+}
+
+.page--unshowable {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: default;
+}
+
+.page--unshowable .button {
+  margin: 0;
+}
+
+.original__caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---- Facts ---- */
+
+.facts__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 4px 4px 4px 14px;
+}
+
+.facts__row + .facts__row {
+  border-top: 1px solid var(--line);
+}
+
+.facts__label {
+  flex-shrink: 0;
+  width: 84px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.facts__value {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 8px 0;
+  font-size: 16px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.facts__value--strong {
+  font-weight: 700;
+}
+
+.facts__copy {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+/* ---- Source (D5) ---- */
+
+.source__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 12px 10px 14px;
+}
+
+.source__row + .source__row {
+  border-top: 1px solid var(--line);
+}
+
+.source__row--link:hover {
+  background: var(--paper);
+}
+
+.source__row--link:focus-visible {
+  outline-offset: -2px;
+}
+
+.source__icon {
+  flex-shrink: 0;
+  display: flex;
+  padding-top: 1px;
+  color: var(--muted);
+}
+
+.source__icon--good {
+  color: var(--good);
+}
+
+.source__text {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.source__title {
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+
+.source__line {
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: break-word;
+}
+
+.source__file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.source__download {
+  width: 40px;
+  height: 40px;
+  margin: -6px -6px -6px 0;
+  border-radius: 10px;
+}
+
+.source__open {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 1px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+/* ---- Download and share ---- */
+
+.document__actions {
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px calc(16px + var(--safe-right)) calc(12px + var(--safe-bottom))
+    calc(16px + var(--safe-left));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.document-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.document-actions__row {
+  display: flex;
+  gap: 10px;
+}
+
+.document-actions__download {
+  flex-grow: 1;
+  gap: 8px;
+  height: 50px;
+}
+
+.document-actions__share {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+}
+
+/* ---- Full screen (/d/:id/original) ---- */
+
+.viewer {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  /* Dark in both themes, like a photo viewer, so the white page stands out. */
+  background: #101014;
+  color: #f4f4f6;
+}
+
+.viewer__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: calc(6px + var(--safe-top)) calc(8px + var(--safe-right)) 6px
+    calc(8px + var(--safe-left));
+}
+
+.viewer__title {
+  flex-grow: 1;
+  min-width: 0;
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.viewer__button {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+
+.viewer__button:hover {
+  background: rgb(255 255 255 / 10%);
+}
+
+.zoom {
+  position: relative;
+  flex-grow: 1;
+  overflow: hidden;
+  /* Every gesture is handled in ZoomPane, the same in a browser and the APK. */
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.zoom:active {
+  cursor: grabbing;
+}
+
+.zoom__content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(100%, 960px);
+  padding: 8px 0 calc(24px + var(--safe-bottom));
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.viewer .pages {
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.viewer .page {
+  border: 0;
+  border-radius: 2px;
+  cursor: inherit;
+}
+
+.viewer .page--unshowable {
+  cursor: default;
+}
+
+@media (min-width: 900px) {
+  .document {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-rows: repeat(5, auto) 1fr;
+    grid-template-areas:
+      'original header'
+      'original deleted'
+      'original facts'
+      'original source'
+      'original actions'
+      'original .';
+    gap: 16px 32px;
+    align-items: start;
+    max-width: 1200px;
+    padding: 32px 0 0;
+  }
+
+  .document__header {
+    grid-area: header;
+    padding-top: 0;
+  }
+
+  .document__deleted {
+    grid-area: deleted;
+  }
+
+  .document__original {
+    grid-area: original;
+  }
+
+  .document__facts {
+    grid-area: facts;
+  }
+
+  .document__source {
+    grid-area: source;
+  }
+
+  .document__actions {
+    grid-area: actions;
+    position: static;
+    padding: 0;
+    background: transparent;
+    border: 0;
+  }
+
+  /* The side column is narrow: "Open in maily" goes under the sender. */
+  .source__row--link {
+    flex-wrap: wrap;
+  }
+
+  .source__open {
+    width: 100%;
+    padding-left: 32px;
+  }
+
+  .document-actions__download {
+    height: 44px;
+  }
+
+  .document-actions__share {
+    width: 44px;
+    height: 44px;
+  }
+}

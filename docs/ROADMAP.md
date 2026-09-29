@@ -31,10 +31,6 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] Document view: the original rendered inline (PDF pages and images, pinch zoom on the phone),
-      the facts beside or below it, and a Source block that says where it came from (sender and
-      date, with a link that opens the mail in maily) and that the original is stored in Moneta
-      (file name, size, date saved). Download or share the original.
 - [ ] Edit details: one form for every field, plus an optional "what you bought" field (searchable,
       shown in the Warranty view). Fields read from mail or OCR carry a marker until saved (the
       `guessed` list).
@@ -49,7 +45,7 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
       The photo is saved as a receipt awaiting details, and a short form (merchant, amount, date)
       can be filled in then or later. Multi-page capture appends pages to the same document.
 - [ ] maily import (A13, A14): settle the body-only receipt decision first. Backfill every message
-      maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), and the job is
+      maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), the sender, subject and received time go into `document.mail`, and the job is
       idempotent on the dedup key. When maily is down, the job logs it, retries later, and the
       archive keeps serving. Settings shows the last import time and any error.
 
@@ -62,7 +58,9 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
       inside the WebView, back button through web history, system bars/insets, app icon. Check that
       the search field docked at the bottom rises above the keyboard (the web app sets
       `interactive-widget=resizes-content`; the activity needs `adjustResize`). Camera
-      capture and upload from section 2 work unchanged inside it.
+      capture and upload from section 2 work unchanged inside it. The document screen's Download
+      needs a WebView DownloadListener, and its Share button (hidden where `navigator.canShare` is
+      missing, as in the WebView) needs a share bridge; "Open in maily" should open maily's app.
 - [ ] Caddy: exempt the PWA assets and `/api/app/{version,download}` from SSO (A11). This edits
       shared host infrastructure, so ask first, then reload Caddy.
 - [ ] Release pipeline: keystore at `~/.config/moneta/keystore.env`, `/api/app/version` and

@@ -30,6 +30,7 @@ function doc(issuedOn: string | null, capturedAt: string): ArchiveDocument {
     createdAt: capturedAt,
     updatedAt: capturedAt,
     deletedAt: null,
+    mail: null,
   };
 }
 

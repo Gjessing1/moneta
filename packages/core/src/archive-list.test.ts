@@ -24,6 +24,7 @@ function doc(overrides: Partial<ArchiveDocument>): ArchiveDocument {
     createdAt: '2026-09-26T08:00:00.000Z',
     updatedAt: '2026-09-26T08:00:00.000Z',
     deletedAt: null,
+    mail: null,
     ...overrides,
   };
 }

@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatAmount, formatDayLong, formatDayShort, formatMonth, localDate } from './format.js';
+import {
+  formatAmount,
+  formatBytes,
+  formatDateTime,
+  formatDayLong,
+  formatDayShort,
+  formatMonth,
+  localDate,
+} from './format.js';
 
 describe('formatAmount', () => {
   it('writes Norwegian kroner with grouped thousands that never wrap', () => {
@@ -27,5 +35,21 @@ describe('dates', () => {
     expect(localDate('2026-09-30T23:30:00.000Z', 'Europe/Oslo')).toBe('2026-10-01');
     expect(localDate('2026-09-30T21:30:00.000Z', 'Europe/Oslo')).toBe('2026-09-30');
     expect(localDate('2026-09-30T23:30:00.000Z', 'UTC')).toBe('2026-09-30');
+  });
+});
+
+describe('formatDateTime', () => {
+  it('shows the local day and a 24-hour time', () => {
+    expect(formatDateTime('2026-09-25T04:12:00.000Z', 'Europe/Oslo')).toBe('25 Sep 2026, 06:12');
+    expect(formatDateTime('2026-09-30T22:30:00.000Z', 'Europe/Oslo')).toBe('1 Oct 2026, 00:30');
+    expect(formatDateTime('2026-01-05T13:05:00.000Z', 'UTC')).toBe('5 Jan 2026, 13:05');
+  });
+});
+
+describe('formatBytes', () => {
+  it('rounds to the unit a person reads', () => {
+    expect(formatBytes(812)).toBe('812 bytes');
+    expect(formatBytes(188_416)).toBe('184 KB');
+    expect(formatBytes(2_516_582)).toBe('2.4 MB');
   });
 });

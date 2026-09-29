@@ -52,6 +52,18 @@ export interface ArchiveDocument {
   updatedAt: string;
   // Set on soft delete; the document can be restored until it is purged.
   deletedAt: string | null;
+  // The message a maily document was filed from; null for every other source.
+  mail: MailOrigin | null;
+}
+
+// The mail as maily's export feed described it (A14). Moneta keeps its own copy,
+// so the Source block still reads right when maily is down or the mail is gone.
+export interface MailOrigin {
+  fromName: string | null;
+  fromAddress: string | null;
+  subject: string | null;
+  // UTC ISO 8601; null when the mail server sent no date.
+  receivedAt: string | null;
 }
 
 export interface DocumentFile {
@@ -75,6 +87,9 @@ export type ParseResult<T> = { ok: true; value: T } | { ok: false; error: string
 export interface DocumentDetail {
   document: ArchiveDocument;
   files: DocumentFile[];
+  // Opens the source mail in maily's web app. Null for other sources, or when
+  // the server doesn't know maily's public address (MAILY_PUBLIC_URL).
+  mailUrl: string | null;
 }
 
 // Originals the archive accepts and serves inline. SVG and HTML are left out on
@@ -103,8 +118,19 @@ export function isDocumentId(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value);
 }
 
+const MAILY_DEDUP_PREFIX = 'maily:';
+
 export function mailyDedupKey(messageId: string): string {
-  return `maily:${messageId}`;
+  return `${MAILY_DEDUP_PREFIX}${messageId}`;
+}
+
+// maily's reader shows a message at /m/<messageId>, the id its feed sends.
+export function mailyMessageUrl(publicUrl: string, doc: ArchiveDocument): string | null {
+  if (publicUrl === '' || doc.dedupKey === null || !doc.dedupKey.startsWith(MAILY_DEDUP_PREFIX)) {
+    return null;
+  }
+  const messageId = doc.dedupKey.slice(MAILY_DEDUP_PREFIX.length);
+  return `${publicUrl.replace(/\/+$/, '')}/m/${encodeURIComponent(messageId)}`;
 }
 
 export function isDocumentSource(value: unknown): value is DocumentSource {

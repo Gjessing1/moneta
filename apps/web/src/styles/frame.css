@@ -14,6 +14,10 @@
   padding-bottom: calc(var(--dock-height) + var(--safe-bottom) + 24px);
 }
 
+.frame--detail .frame__main {
+  padding-bottom: calc(var(--action-bar-height) + var(--safe-bottom) + 24px);
+}
+
 /* ---- Navigation: bottom bar ---- */
 
 .app-nav {
@@ -31,7 +35,8 @@
   border-top: 1px solid var(--line);
 }
 
-.frame--search .app-nav {
+.frame--search .app-nav,
+.frame--detail .app-nav {
   display: none;
 }
 
@@ -177,12 +182,14 @@
     min-height: 100dvh;
   }
 
-  .frame__main {
+  .frame__main,
+  .frame--detail .frame__main {
     padding: 0 32px 48px;
   }
 
   .app-nav,
-  .frame--search .app-nav {
+  .frame--search .app-nav,
+  .frame--detail .app-nav {
     position: sticky;
     top: 0;
     display: flex;

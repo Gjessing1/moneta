@@ -9,7 +9,9 @@ import type {
   DocumentKind,
   DocumentSource,
   GuessableField,
+  MailOrigin,
 } from '@moneta/core/document';
+import { mailyMessageUrl } from '@moneta/core/document';
 import type { Db } from './database.js';
 
 interface DocumentRow {
@@ -31,6 +33,10 @@ interface DocumentRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  mail_from_name: string | null;
+  mail_from_address: string | null;
+  mail_subject: string | null;
+  mail_received_at: string | null;
 }
 
 interface FileRow {
@@ -65,7 +71,25 @@ function toDocument(row: DocumentRow): ArchiveDocument {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     deletedAt: row.deleted_at,
+    mail: toMailOrigin(row),
   };
+}
+
+function toMailOrigin(row: DocumentRow): MailOrigin | null {
+  const mail: MailOrigin = {
+    fromName: row.mail_from_name,
+    fromAddress: row.mail_from_address,
+    subject: row.mail_subject,
+    receivedAt: row.mail_received_at,
+  };
+  if (Object.values(mail).every(isNull)) {
+    return null;
+  }
+  return mail;
+}
+
+function isNull(value: unknown): boolean {
+  return value === null;
 }
 
 function toFile(row: FileRow): DocumentFile {
@@ -87,13 +111,22 @@ export function insertDocument(db: Db, doc: ArchiveDocument): void {
     `INSERT INTO documents (
        id, source, kind, merchant, amount_minor, currency, issued_on, due_on,
        kid, account, iban, notes, dedup_key, guessed,
-       captured_at, created_at, updated_at, deleted_at
+       captured_at, created_at, updated_at, deleted_at,
+       mail_from_name, mail_from_address, mail_subject, mail_received_at
      ) VALUES (
        @id, @source, @kind, @merchant, @amountMinor, @currency, @issuedOn, @dueOn,
        @kid, @account, @iban, @notes, @dedupKey, @guessed,
-       @capturedAt, @createdAt, @updatedAt, @deletedAt
+       @capturedAt, @createdAt, @updatedAt, @deletedAt,
+       @mailFromName, @mailFromAddress, @mailSubject, @mailReceivedAt
      )`,
-  ).run({ ...doc, guessed: JSON.stringify(doc.guessed) });
+  ).run({
+    ...doc,
+    guessed: JSON.stringify(doc.guessed),
+    mailFromName: doc.mail?.fromName ?? null,
+    mailFromAddress: doc.mail?.fromAddress ?? null,
+    mailSubject: doc.mail?.subject ?? null,
+    mailReceivedAt: doc.mail?.receivedAt ?? null,
+  });
 }
 
 export function getDocument(db: Db, id: string): ArchiveDocument | undefined {
@@ -104,16 +137,27 @@ export function getDocument(db: Db, id: string): ArchiveDocument | undefined {
   return toDocument(row);
 }
 
-export function getDocumentDetail(db: Db, id: string): DocumentDetail | undefined {
+// mailyPublicUrl is configuration (A3), passed in so the link is built by the
+// same core function everywhere.
+export function getDocumentDetail(
+  db: Db,
+  id: string,
+  mailyPublicUrl: string,
+): DocumentDetail | undefined {
   const document = getDocument(db, id);
   if (document === undefined) {
     return undefined;
   }
-  return { document, files: listFiles(db, id) };
+  return {
+    document,
+    files: listFiles(db, id),
+    mailUrl: mailyMessageUrl(mailyPublicUrl, document),
+  };
 }
 
 // Writes every mutable column. The identity columns (source, dedup key,
-// timestamps of capture and creation) never change after insert.
+// timestamps of capture and creation, the mail it came from) never change
+// after insert.
 export function updateDocument(db: Db, doc: ArchiveDocument): void {
   db.prepare(
     `UPDATE documents SET

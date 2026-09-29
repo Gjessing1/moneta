@@ -25,6 +25,7 @@ function receipt(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     createdAt: NOW,
     updatedAt: NOW,
     deletedAt: null,
+    mail: null,
     ...overrides,
   };
 }
@@ -56,6 +57,20 @@ describe('documents', () => {
     insertDocument(db, receipt());
     expect(getDocument(db, receipt().id)).toEqual(receipt());
     expect(getDocument(db, 'missing')).toBeUndefined();
+  });
+
+  it('keeps where a maily document was mailed from', () => {
+    const db = freshDb();
+    const mailed = receipt({
+      mail: {
+        fromName: 'Hafslund',
+        fromAddress: 'faktura@hafslund.no',
+        subject: 'Faktura september',
+        receivedAt: '2026-09-01T04:12:00.000Z',
+      },
+    });
+    insertDocument(db, mailed);
+    expect(getDocument(db, mailed.id)).toEqual(mailed);
   });
 
   it('refuses a second document for the same upstream item (A8)', () => {

@@ -22,11 +22,14 @@ export function App() {
     [route],
   );
 
-  // Search gives the phone's bottom edge to the search field and keyboard, so
-  // the bottom bar steps aside there (frame.css).
+  // Search gives the phone's bottom edge to the search field and keyboard, and
+  // a document gives it to its download bar, so the bottom bar steps aside
+  // there (frame.css).
   let frameClass = 'frame';
   if (route.name === 'search') {
     frameClass = 'frame frame--search';
+  } else if (route.name === 'document' || route.name === 'original') {
+    frameClass = 'frame frame--detail';
   }
 
   return (
@@ -56,7 +59,10 @@ function renderScreen(
         <SettingsScreen themePreference={themePreference} onThemeChange={setThemePreference} />
       );
     case 'document':
-      return <DocumentScreen key={route.id} id={route.id} />;
+    case 'original':
+      // One screen for both, keyed on the id, so opening the full-screen view
+      // keeps what is loaded and drawn.
+      return <DocumentScreen key={route.id} id={route.id} viewer={route.name === 'original'} />;
     case 'notFound':
       return (
         <div className="screen">
@@ -87,6 +93,8 @@ function titleOf(route: Route): string {
       return 'Settings';
     case 'document':
       return 'Document';
+    case 'original':
+      return 'Original';
     case 'notFound':
       return 'Not found';
   }

@@ -8,11 +8,34 @@ import {
   isGuessableField,
   isStorableContentType,
   mailyDedupKey,
+  mailyMessageUrl,
+  type ArchiveDocument,
 } from './document.js';
 
 describe('mailyDedupKey', () => {
   it('prefixes the maily message id with its source', () => {
     expect(mailyDedupKey('42')).toBe('maily:42');
+  });
+});
+
+describe('mailyMessageUrl', () => {
+  function withKey(dedupKey: string | null): ArchiveDocument {
+    return { dedupKey } as ArchiveDocument;
+  }
+
+  it("opens the message in maily's reader", () => {
+    expect(mailyMessageUrl('https://mail.example', withKey('maily:4f2a'))).toBe(
+      'https://mail.example/m/4f2a',
+    );
+    expect(mailyMessageUrl('https://mail.example/', withKey('maily:a/b'))).toBe(
+      'https://mail.example/m/a%2Fb',
+    );
+  });
+
+  it('has no link without a maily message or a configured address', () => {
+    expect(mailyMessageUrl('https://mail.example', withKey(null))).toBeNull();
+    expect(mailyMessageUrl('https://mail.example', withKey('other:1'))).toBeNull();
+    expect(mailyMessageUrl('', withKey('maily:4f2a'))).toBeNull();
   });
 });
 

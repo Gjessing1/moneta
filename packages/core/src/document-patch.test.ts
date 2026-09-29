@@ -25,6 +25,7 @@ function invoice(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     createdAt: NOW,
     updatedAt: NOW,
     deletedAt: null,
+    mail: null,
     ...overrides,
   };
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { groupByMonth, type ArchiveRow } from '@moneta/core/archive-list';
 import type { ArchiveDocument, DocumentSource } from '@moneta/core/document';
-import { CameraIcon, MailIcon, ShareIcon, UploadIcon } from '../icons';
+import { SourceIcon } from '../icons';
 import { Link } from '../router';
 
 interface RecentListProps {
@@ -73,22 +73,9 @@ function DocumentRow({ row }: { row: ArchiveRow }) {
 function SourceBadge({ source }: { source: DocumentSource }) {
   return (
     <span className="doc-row__badge" aria-hidden="true">
-      {sourceIcon(source)}
+      <SourceIcon source={source} size={18} strokeWidth={1.9} />
     </span>
   );
-}
-
-function sourceIcon(source: DocumentSource) {
-  switch (source) {
-    case 'maily':
-      return <MailIcon size={18} strokeWidth={1.9} />;
-    case 'camera':
-      return <CameraIcon size={18} strokeWidth={1.9} />;
-    case 'upload':
-      return <UploadIcon size={18} strokeWidth={1.9} />;
-    case 'share':
-      return <ShareIcon size={18} strokeWidth={1.9} />;
-  }
 }
 
 function MoreLoader({

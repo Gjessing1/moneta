@@ -24,6 +24,11 @@ describe('parseRoute', () => {
 
   it('opens a document by id', () => {
     expect(parseRoute('/d/4f1c2b', '')).toEqual({ name: 'document', id: '4f1c2b' });
+    expect(parseRoute('/d/4f1c2b/original', '')).toEqual({ name: 'original', id: '4f1c2b' });
+    expect(parseRoute('/d/4f1c2b/other', '')).toEqual({
+      name: 'notFound',
+      path: '/d/4f1c2b/other',
+    });
   });
 
   it('forgives trailing and doubled slashes', () => {
@@ -47,6 +52,7 @@ describe('routePath', () => {
       { name: 'capture' },
       { name: 'settings' },
       { name: 'document', id: 'a/b c' },
+      { name: 'original', id: 'a/b c' },
     ];
     for (const route of routes) {
       const url = new URL(routePath(route), 'https://moneta.test');
@@ -59,6 +65,7 @@ describe('sectionOf', () => {
   it('keeps search and documents under the archive', () => {
     expect(sectionOf({ name: 'search', query: 'x' })).toBe('archive');
     expect(sectionOf({ name: 'document', id: 'x' })).toBe('archive');
+    expect(sectionOf({ name: 'original', id: 'x' })).toBe('archive');
     expect(sectionOf({ name: 'capture' })).toBe('capture');
     expect(sectionOf({ name: 'notFound', path: '/x' })).toBeNull();
   });
