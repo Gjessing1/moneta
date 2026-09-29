@@ -25,17 +25,14 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 Nothing here is visible to users. It fixes the decisions everything else builds on.
 
-- [ ] Settle the open decisions that block section 2: import trigger, maily interface and storage of
-      originals ([ARCHITECTURE.md](ARCHITECTURE.md#open-decisions)). Record each one as an
-      `A`-entry. If the maily interface decision is "a dedicated export endpoint", add that endpoint
-      to maily first (in the maily repo, with its own tests).
 - [ ] Data model in `packages/core` plus SQLite in the backend (`better-sqlite3`; approve its
       install script as `package.json` explains). `documents`: UUID, source
       `maily|camera|upload|share`, kind `invoice|receipt|other`, merchant, amount in minor units +
       currency, issued date, due date, payment facts (KID, account, IBAN), paid-at, notes,
       `capturedAt`/`createdAt`/`updatedAt` (UTC), a unique source dedup key (A8), and a per-field
-      "guessed" flag for extracted values. `files`: document id, content type, size, sha256, page
-      order. Migrations run at startup.
+      "guessed" flag for extracted values. `files`: document id, content type, size, sha256 (A15),
+      page order and the maily attachment id when there is one. The import cursor (A13) gets its own
+      small table. Migrations run at startup.
 - [ ] Document API: `PUT /api/documents/:uuid/file` (idempotent, A12), `GET /api/documents` (paged,
       filtered), `GET /api/documents/:id`, `PATCH /api/documents/:id`, `DELETE` (soft delete that
       can be undone for 30 days), and `GET /api/documents/:id/file/:n` streamed from the data dir.
@@ -57,8 +54,8 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
 - [ ] Camera capture: the Capture tab opens the rear camera in one tap (`capture="environment"`).
       The photo is saved as a receipt awaiting details, and a short form (merchant, amount, date)
       can be filled in then or later. Multi-page capture appends pages to the same document.
-- [ ] maily import: backfill every message maily classifies as an invoice or receipt, then run
-      incrementally. The document attachment is copied into the data dir (A8), and the job is
+- [ ] maily import (A13, A14): settle the body-only receipt decision first. Backfill every message
+      maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), and the job is
       idempotent on the dedup key. When maily is down, the job logs it, retries later, and the
       archive keeps serving. Settings shows the last import time and any error.
 
