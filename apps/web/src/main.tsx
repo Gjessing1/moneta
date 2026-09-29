@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/frame.css';
 import './styles/screens.css';
+import './styles/archive.css';
 import { App } from './App';
 
 const root = document.getElementById('root');

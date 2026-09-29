@@ -31,9 +31,6 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] Archive list (the Recent view): one list across all sources, newest first, grouped by month.
-      Each row shows merchant (or what was bought, once named), amount, date, kind and source, and
-      the list scrolls smoothly past a few thousand items.
 - [ ] Document view: the original rendered inline (PDF pages and images, pinch zoom on the phone),
       the facts beside or below it, and a Source block that says where it came from (sender and
       date, with a link that opens the mail in maily) and that the original is stored in Moneta

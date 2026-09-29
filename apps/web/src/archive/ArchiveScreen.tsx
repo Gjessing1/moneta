@@ -2,6 +2,8 @@ import type { ArchiveView } from '@moneta/core/routes';
 import { EmptyState } from '../frame/EmptyState';
 import { SearchIcon } from '../icons';
 import { Link } from '../router';
+import { RecentList } from './RecentList';
+import { useArchiveList } from './useArchiveList';
 import { ViewTabs } from './ViewTabs';
 
 export function ArchiveScreen({ view }: { view: ArchiveView }) {
@@ -15,8 +17,42 @@ export function ArchiveScreen({ view }: { view: ArchiveView }) {
         </Link>
       </header>
       <ViewTabs view={view} />
-      <ArchiveEmpty view={view} />
+      {view === 'recent' ? <RecentView /> : <ArchiveEmpty view={view} />}
     </div>
+  );
+}
+
+function RecentView() {
+  const list = useArchiveList();
+
+  if (list.status === 'loading') {
+    return <p className="note list-status">Loading the archive…</p>;
+  }
+  if (list.status === 'error') {
+    return (
+      <EmptyState
+        title="The archive could not be loaded"
+        action={
+          <button type="button" className="button" onClick={list.retry}>
+            Try again
+          </button>
+        }
+      >
+        {list.error}
+      </EmptyState>
+    );
+  }
+  if (list.items.length === 0) {
+    return <ArchiveEmpty view="recent" />;
+  }
+  return (
+    <RecentList
+      docs={list.items}
+      hasMore={list.nextCursor !== null}
+      loadingMore={list.loadingMore}
+      moreError={list.moreError}
+      onLoadMore={list.loadMore}
+    />
   );
 }
 

@@ -92,3 +92,23 @@ export function ClearIcon(props: IconProps) {
     </IconFrame>
   );
 }
+
+export function MailIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <rect x="3.5" y="5.5" width="17" height="13" rx="2" />
+      <path d="m4.5 7.5 7.5 5.5 7.5-5.5" />
+    </IconFrame>
+  );
+}
+
+export function ShareIcon(props: IconProps) {
+  return (
+    <IconFrame {...props}>
+      <circle cx="17.5" cy="5.5" r="2.5" />
+      <circle cx="6.5" cy="12" r="2.5" />
+      <circle cx="17.5" cy="18.5" r="2.5" />
+      <path d="m8.7 10.7 6.6-3.9M8.7 13.3l6.6 3.9" />
+    </IconFrame>
+  );
+}

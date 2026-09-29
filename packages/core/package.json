@@ -9,6 +9,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./archive-list": {
+      "types": "./dist/archive-list.d.ts",
+      "default": "./dist/archive-list.js"
+    },
     "./document": {
       "types": "./dist/document.d.ts",
       "default": "./dist/document.js"
@@ -24,6 +28,10 @@
     "./document-upload": {
       "types": "./dist/document-upload.d.ts",
       "default": "./dist/document-upload.js"
+    },
+    "./format": {
+      "types": "./dist/format.d.ts",
+      "default": "./dist/format.js"
     },
     "./routes": {
       "types": "./dist/routes.d.ts",
