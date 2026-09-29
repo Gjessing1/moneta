@@ -25,9 +25,9 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 Nothing here is visible to users. It fixes the decisions everything else builds on.
 
-- [ ] Add `/home/gjessing/data/moneta` to the nightly backups (SQLite via `.backup`, originals as
-      files) and write down how in DEPLOYMENT.md. This must be done before the first real document
-      is stored.
+- [~] Nightly backups of `/home/gjessing/data/moneta`. `scripts/backup-database.sh` and the steps
+      are in DEPLOYMENT.md › Backups. Left: the Backrest mount, plan and hook (root), then one run
+      checked with `restic-search.sh`. Must be done before the first real document is stored.
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
