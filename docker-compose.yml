@@ -15,6 +15,9 @@ services:
       # Loopback + docker bridge only; Caddy is the public entry point.
       - '127.0.0.1:3047:3047'
       - '172.17.0.1:3047:3047'
+    extra_hosts:
+      # Reaches maily's bridge-published port (172.17.0.1:3060) as host.docker.internal.
+      - 'host.docker.internal:host-gateway'
     volumes:
       - type: bind
         source: /home/gjessing/data/moneta

@@ -1,6 +1,6 @@
 # Moneta
 
-One-line description.
+Receipts and invoices in one archive: collected from maily, captured with the phone camera.
 
 ## Development
 
