@@ -25,14 +25,6 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 Nothing here is visible to users. It fixes the decisions everything else builds on.
 
-- [ ] Data model in `packages/core` plus SQLite in the backend (`better-sqlite3`; approve its
-      install script as `package.json` explains). `documents`: UUID, source
-      `maily|camera|upload|share`, kind `invoice|receipt|other`, merchant, amount in minor units +
-      currency, issued date, due date, payment facts (KID, account, IBAN), paid-at, notes,
-      `capturedAt`/`createdAt`/`updatedAt` (UTC), a unique source dedup key (A8), and a per-field
-      "guessed" flag for extracted values. `files`: document id, content type, size, sha256 (A15),
-      page order and the maily attachment id when there is one. The import cursor (A13) gets its own
-      small table. Migrations run at startup.
 - [ ] Document API: `PUT /api/documents/:uuid/file` (idempotent, A12), `GET /api/documents` (paged,
       filtered), `GET /api/documents/:id`, `PATCH /api/documents/:id`, `DELETE` (soft delete that
       can be undone for 30 days), and `GET /api/documents/:id/file/:n` streamed from the data dir.

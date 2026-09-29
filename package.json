@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Moneta — one-line description.",
+  "description": "Moneta \u2014 one-line description.",
   "workspaces": [
     "packages/*",
     "apps/*",
@@ -37,8 +37,9 @@
     "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.2"
   },
-  "_comment:allowScripts": "npm 11+ warns about dependency install scripts nobody approved, and blocks them when strict-allow-scripts is on. esbuild's script only checks its binary. Approve a new one with `npm install-scripts approve <pkg>`, then remove the @version it pins so upgrades stay approved. A native addon such as better-sqlite3 NEEDS its script: if it is blocked, the package installs without its binding and the app crashes at startup, not at build.",
+  "_comment:allowScripts": "npm 11+ blocks or warns about dependency install scripts nobody approved. Approve one with `npm install-scripts approve <pkg>`, then remove the @version it pins so upgrades stay approved. esbuild's script only checks its binary. better-sqlite3 is denied on purpose: since v13 it ships N-API prebuilds for linux x64/arm64 (glibc and musl) and loads them first, so its implicit `node-gyp rebuild` only needs python3, which the slim image lacks, and builds nothing. A native addon without a bundled prebuild would NEED its script: if it is blocked, the package installs without its binding and the app crashes at startup, not at build.",
   "allowScripts": {
+    "better-sqlite3": false,
     "esbuild": true
   }
 }
