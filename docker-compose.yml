@@ -1,0 +1,23 @@
+# Reference deploy file. The live copy lives in /home/gjessing/docker/moneta
+# (compose + .env), created by scripts/host-setup.sh; CI runs
+# `docker compose pull && up -d` there on every push to main.
+services:
+  backend:
+    image: git.gjessing.io/gjessing1/moneta-backend:latest
+    container_name: moneta-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      MONETA_DATA_DIR: /data
+    ports:
+      # Loopback + docker bridge only; Caddy is the public entry point.
+      - '127.0.0.1:3047:3047'
+      - '172.17.0.1:3047:3047'
+    volumes:
+      - type: bind
+        source: /home/gjessing/data/moneta
+        target: /data
+        bind:
+          create_host_path: false

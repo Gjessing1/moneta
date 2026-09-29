@@ -1,0 +1,10 @@
+node_modules
+dist
+build
+backend/public
+CLAUDE.md
+AGENTS.md
+TEMPLATE.md
+docs
+.claude
+package-lock.json
