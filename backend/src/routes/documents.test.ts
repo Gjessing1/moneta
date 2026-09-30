@@ -8,7 +8,7 @@ import type { DocumentPage } from '@moneta/core/document-list';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config.js';
 import { migrate, openDatabase, type Db } from '../db/database.js';
-import { insertDocument } from '../db/documents.js';
+import { insertDocument, insertFile } from '../db/documents.js';
 import { originalPath } from '../storage/originals.js';
 
 const ID = '0d6f1c1e-6a3b-4c8e-9a52-2f0c4b1e7a10';
@@ -48,6 +48,8 @@ function stored(overrides: Partial<ArchiveDocument>): ArchiveDocument {
     kind: 'invoice',
     merchant: 'Hafslund',
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: 149950,
     currency: 'NOK',
     issuedOn: '2026-09-01',
@@ -245,6 +247,56 @@ describe('GET /api/documents/:id/file/:n', () => {
 });
 
 describe('GET /api/documents', () => {
+  it('lists shops and tags and filters starred documents and attachment-free bills', async () => {
+    const { app, db } = await setup();
+    const bill = stored({
+      id: `${ID.slice(0, -1)}1`,
+      merchant: 'Kiwi',
+      tags: ['House'],
+      starred: true,
+    });
+    const attached = stored({ id: `${ID.slice(0, -1)}2`, merchant: 'Kiwi', tags: ['house'] });
+    const receipt = stored({
+      id: `${ID.slice(0, -1)}3`,
+      merchant: 'Rema',
+      kind: 'receipt',
+      tags: ['Work'],
+    });
+    for (const doc of [bill, attached, receipt]) insertDocument(db, doc);
+    insertFile(db, {
+      id: 'f0000000-0000-4000-8000-000000000000',
+      documentId: attached.id,
+      position: 0,
+      contentType: 'application/pdf',
+      sizeBytes: 10,
+      sha256: 'a'.repeat(64),
+      fileName: null,
+      mailyAttachmentId: 'a',
+      createdAt: attached.createdAt,
+    });
+    const facets = (await app.inject({ method: 'GET', url: '/api/archive/facets' })).json();
+    expect(facets).toEqual({
+      shops: [
+        { name: 'Kiwi', count: 2 },
+        { name: 'Rema', count: 1 },
+      ],
+      tags: [
+        { name: 'House', count: 2 },
+        { name: 'Work', count: 1 },
+      ],
+    });
+    async function ids(query: string) {
+      const res = await app.inject({ method: 'GET', url: `/api/documents?${query}` });
+      return res.json<DocumentPage>().items.map(function id(item) {
+        return item.id;
+      });
+    }
+    expect(await ids('shop=kiwi')).toEqual([attached.id, bill.id]);
+    expect(await ids('tag=HOUSE')).toEqual([attached.id, bill.id]);
+    expect(await ids('starred=true')).toEqual([bill.id]);
+    expect(await ids('bills=true')).toEqual([bill.id]);
+  });
+
   it('pages newest first without repeating or skipping anything', async () => {
     const { app, db } = await setup();
     const ids = seed(db, 45);
@@ -319,13 +371,21 @@ describe('PATCH /api/documents/:id', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/api/documents/${ID}`,
-      payload: { merchant: 'Hafslund Strøm', purchasedItem: 'Heater', notes: 'august' },
+      payload: {
+        merchant: 'Hafslund Strøm',
+        purchasedItem: 'Heater',
+        tags: ['Energy'],
+        starred: true,
+        notes: 'august',
+      },
     });
     expect(res.statusCode).toBe(200);
     const doc = res.json<DocumentDetail>().document;
     expect(doc).toMatchObject({
       merchant: 'Hafslund Strøm',
       purchasedItem: 'Heater',
+      tags: ['Energy'],
+      starred: true,
       notes: 'august',
       guessed: ['amountMinor'],
     });
@@ -335,6 +395,15 @@ describe('PATCH /api/documents/:id', () => {
     const found = await app.inject({ method: 'GET', url: '/api/documents?q=heater' });
     expect(
       found.json<DocumentPage>().items.map(function id(item) {
+        return item.id;
+      }),
+    ).toEqual([ID]);
+    const tagged = await app.inject({
+      method: 'GET',
+      url: '/api/documents?tag=energy&starred=true',
+    });
+    expect(
+      tagged.json<DocumentPage>().items.map(function id(item) {
         return item.id;
       }),
     ).toEqual([ID]);

@@ -36,10 +36,13 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
       are purged after 30 days. A deleted maily document is never imported again. The purge job
       also removes originals that no `files` row references (A15), e.g. left by a crash between
       storing the bytes and inserting the row. The soft delete and restore API already exist.
-- [ ] maily import (A13, A14): settle the body-only receipt decision first. Backfill every message
+- [ ] maily import (A13, A14, A18): backfill every message
       maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), the sender, subject and received time go into `document.mail`, and the job is
-      idempotent on the dedup key. When maily is down, the job logs it, retries later, and the
-      archive keeps serving. Settings shows the last import time and any error.
+      idempotent on the dedup key. Import messages without document attachments as facts-only
+      documents; attachment-free invoices appear under Bills. After an invoice-enricher version bump
+      in maily, verify its backfill re-emits previously missed old messages and the existing cursor
+      picks them up. When maily is down, the job logs it, retries later, and the archive keeps
+      serving. Settings shows the last import time and any error.
 
 ## 3. Android app: same features, from here on
 
@@ -76,11 +79,10 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
       text, OCR text once section 5 lands). Move lookup to SQLite FTS5; results arrive while typing.
 - [ ] Filters: kind, source, shop, date range and amount range, as chips above the search box.
       Filters are stored in the URL, so a filtered view can be bookmarked or shared to the app.
-- [ ] Shops view: every merchant with its document count and latest date, most used first, then A
-      to Z. Opening one lists its documents.
-- [ ] Tags/categories: a free-form tag per document (e.g. `bolig`, `bil`, `jobb`), filterable, with
-      suggestions from the merchant's earlier tags. The Tags view lists them with counts; Settings ›
-      Tags renames, merges and removes them.
+- [~] Shops view: counts and exact merchant filters work. Left: show the latest document date for
+      every merchant.
+- [~] Tags/categories: editable free-form tags, counts and exact filters work. Left: suggest tags
+      from the merchant's earlier documents; Settings › Tags renames, merges and removes them.
 - [ ] Select several: long-press enters select mode; tag, export or delete the selection.
 
 ## 5. Capture quality
@@ -101,9 +103,6 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
 - [ ] Export: pick a date range (plus the current filters) and get a ZIP with the originals, named
       `YYYY-MM-DD merchant amount.ext`, and a CSV of the facts. On Android the ZIP goes to the
       system share sheet or Downloads.
-- [ ] Warranty: mark a receipt as a warranty item (default 5 years for goods under Norwegian
-      consumer law, 2 for cheap items, set in Settings). The Warranty view lists items by what was
-      bought, covered ones by end date, then expired ones.
 
 ## Later / maybe
 

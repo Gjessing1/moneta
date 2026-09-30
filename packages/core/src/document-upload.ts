@@ -150,6 +150,8 @@ export function newUploadedDocument(
     kind,
     merchant: null,
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: null,
     currency: null,
     issuedOn: null,

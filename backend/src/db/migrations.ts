@@ -69,4 +69,10 @@ export const MIGRATIONS: readonly string[] = [
   // A plain description of the goods, kept separately from the shop and notes
   // so warranty entries can be named by what was bought.
   `ALTER TABLE documents ADD COLUMN purchased_item TEXT;`,
+  `
+  ALTER TABLE documents ADD COLUMN tags TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(tags));
+  ALTER TABLE documents ADD COLUMN starred INTEGER NOT NULL DEFAULT 0 CHECK (starred IN (0, 1));
+  CREATE INDEX documents_merchant ON documents (merchant) WHERE deleted_at IS NULL;
+  CREATE INDEX documents_starred ON documents (starred) WHERE deleted_at IS NULL;
+  `,
 ];

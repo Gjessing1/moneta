@@ -49,7 +49,13 @@ function renderScreen(
 ) {
   switch (route.name) {
     case 'archive':
-      return <ArchiveScreen view={route.view} />;
+      return (
+        <ArchiveScreen
+          key={`${route.view}:${route.filter ?? ''}`}
+          view={route.view}
+          filter={route.filter}
+        />
+      );
     case 'search':
       return <SearchScreen query={route.query} />;
     case 'capture':

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DocumentDetail } from '@moneta/core/document';
 import { describeDocumentView } from '@moneta/core/document-view';
-import { fileUrl } from '../api';
+import { describeError, fileUrl, saveDocument } from '../api';
 import { EmptyState } from '../frame/EmptyState';
 import { BackIcon } from '../icons';
 import { BackLink, Link, navigate } from '../router';
@@ -79,6 +79,8 @@ export function DocumentScreen({ id, viewer }: { id: string; viewer: boolean }) 
 function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: boolean }) {
   const [current, setCurrent] = useState(detail);
   const [editing, setEditing] = useState(false);
+  const [starError, setStarError] = useState<string | null>(null);
+  const [savingStar, setSavingStar] = useState(false);
   const { document: doc, files, mailUrl } = current;
   const view = useMemo(
     function describe() {
@@ -118,17 +120,43 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
           <p className="document__subtitle">{view.subtitle}</p>
         </div>
         {!viewer && doc.deletedAt === null && !editing && (
-          <button
-            type="button"
-            className="text-button document__edit-link"
-            onClick={function startEdit() {
-              setEditing(true);
-            }}
-          >
-            Edit
-          </button>
+          <>
+            <button
+              type="button"
+              className="text-button document__star-link"
+              disabled={savingStar}
+              aria-pressed={doc.starred}
+              onClick={async function toggleStar() {
+                setSavingStar(true);
+                setStarError(null);
+                try {
+                  setCurrent(await saveDocument(doc.id, { starred: !doc.starred }));
+                } catch (error) {
+                  setStarError(describeError(error));
+                } finally {
+                  setSavingStar(false);
+                }
+              }}
+            >
+              {doc.starred ? '★ Starred' : '☆ Star'}
+            </button>
+            <button
+              type="button"
+              className="text-button document__edit-link"
+              onClick={function startEdit() {
+                setEditing(true);
+              }}
+            >
+              Edit
+            </button>
+          </>
         )}
       </header>
+      {starError !== null && (
+        <p className="document-edit__error" role="alert">
+          {starError}
+        </p>
+      )}
       {view.deleted !== null && (
         <p className="document__deleted" role="status">
           {view.deleted}. It stays out of the archive until it is restored.
@@ -170,6 +198,21 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
                   Add details
                 </button>
               )}
+            </div>
+          )}
+          {doc.tags.length > 0 && (
+            <div className="document__tags">
+              {doc.tags.map(function tag(name) {
+                return (
+                  <Link
+                    key={name}
+                    to={{ name: 'archive', view: 'tags', filter: name }}
+                    className="document__tag"
+                  >
+                    {name}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </section>

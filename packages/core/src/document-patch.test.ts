@@ -12,6 +12,8 @@ function invoice(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     kind: 'invoice',
     merchant: 'Hafslund',
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: 149950,
     currency: 'NOK',
     issuedOn: '2026-09-01',
@@ -36,6 +38,8 @@ describe('parseDocumentPatch', () => {
     const result = parseDocumentPatch({
       merchant: '  Kiwi Majorstuen ',
       purchasedItem: '  Headphones ',
+      tags: [],
+      starred: false,
       amountMinor: 4990,
       currency: 'nok',
       issuedOn: '2026-09-28',
@@ -46,6 +50,8 @@ describe('parseDocumentPatch', () => {
       value: {
         merchant: 'Kiwi Majorstuen',
         purchasedItem: 'Headphones',
+        tags: [],
+        starred: false,
         amountMinor: 4990,
         currency: 'NOK',
         issuedOn: '2026-09-28',
@@ -79,6 +85,15 @@ describe('parseDocumentPatch', () => {
     expect(parseDocumentPatch({ purchasedItem: 'x'.repeat(501) })).toMatchObject({ ok: false });
     expect(parseDocumentPatch([])).toMatchObject({ ok: false });
     expect(parseDocumentPatch(null)).toMatchObject({ ok: false });
+    expect(parseDocumentPatch({ tags: ['ok', ''] })).toMatchObject({ ok: false });
+    expect(parseDocumentPatch({ starred: 'true' })).toMatchObject({ ok: false });
+  });
+
+  it('normalizes tags and accepts a star', () => {
+    expect(parseDocumentPatch({ tags: [' Jobb ', 'jobb', 'Bolig'], starred: true })).toEqual({
+      ok: true,
+      value: { tags: ['Jobb', 'Bolig'], starred: true },
+    });
   });
 });
 

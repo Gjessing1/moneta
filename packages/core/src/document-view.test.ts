@@ -16,6 +16,8 @@ function doc(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     kind: 'invoice',
     merchant: 'Fjordkraft',
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: 118400,
     currency: 'NOK',
     issuedOn: '2026-09-25',

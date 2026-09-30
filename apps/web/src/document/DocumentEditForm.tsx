@@ -19,6 +19,7 @@ export function DocumentEditForm({ document: doc, onSaved, onCancel }: Props) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tags, setTags] = useState(doc.tags.join(', '));
 
   function update(field: keyof DocumentEditValues, value: string) {
     setValues(function replace(previous) {
@@ -37,10 +38,16 @@ export function DocumentEditForm({ document: doc, onSaved, onCancel }: Props) {
       setError(parsed.error);
       return;
     }
+    const nextTags = tags
+      .split(',')
+      .map(function trim(tag) {
+        return tag.trim();
+      })
+      .filter(Boolean);
     setSaving(true);
     setError(null);
     try {
-      onSaved(await saveDocument(doc.id, parsed.value));
+      onSaved(await saveDocument(doc.id, { ...parsed.value, tags: nextTags }));
     } catch (err) {
       setError(describeError(err));
     } finally {
@@ -123,6 +130,18 @@ export function DocumentEditForm({ document: doc, onSaved, onCancel }: Props) {
       </fieldset>
       <fieldset className="document-edit__group">
         <legend>Notes</legend>
+        <label className="document-edit__field">
+          <span className="document-edit__label">Tags (comma separated)</span>
+          <input
+            name="tags"
+            value={tags}
+            disabled={saving}
+            onChange={function change(event) {
+              setTags(event.target.value);
+            }}
+            placeholder="e.g. bolig, jobb"
+          />
+        </label>
         <label className="document-edit__field">
           <span className="visually-hidden">Notes</span>
           <textarea

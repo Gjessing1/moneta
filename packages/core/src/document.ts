@@ -30,6 +30,8 @@ export interface ArchiveDocument {
   kind: DocumentKind;
   merchant: string | null;
   purchasedItem: string | null;
+  tags: string[];
+  starred: boolean;
   // Integer minor units (øre, cents), so sums never pick up float error.
   amountMinor: number | null;
   // ISO 4217 code. Required whenever there is an amount.

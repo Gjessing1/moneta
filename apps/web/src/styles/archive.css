@@ -90,6 +90,38 @@
   font-weight: 600;
 }
 
+.doc-row__item {
+  font-weight: 400;
+}
+
+.archive-filter-title {
+  padding: 4px 8px 12px;
+  font-size: 18px;
+}
+.facet-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.facet-list > li + li {
+  border-top: 1px solid var(--line);
+}
+.facet-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 52px;
+  padding: 10px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.facet-row:hover {
+  background: var(--paper);
+}
+.facet-row .num {
+  color: var(--muted);
+}
+
 .doc-row__detail {
   font-size: 13px;
   line-height: 17px;

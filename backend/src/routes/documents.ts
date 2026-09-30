@@ -6,7 +6,13 @@ import type { DocumentPage } from '@moneta/core/document-list';
 import { parseDocumentListQuery } from '@moneta/core/document-list';
 import { applyDocumentPatch, parseDocumentPatch } from '@moneta/core/document-patch';
 import type { Db } from '../db/database.js';
-import { getDocument, getDocumentDetail, listDocuments, updateDocument } from '../db/documents.js';
+import {
+  getDocument,
+  getDocumentDetail,
+  listArchiveFacets,
+  listDocuments,
+  updateDocument,
+} from '../db/documents.js';
 
 interface IdParams {
   id: string;
@@ -19,6 +25,9 @@ interface ErrorBody {
 const NOT_FOUND: ErrorBody = { error: 'no document with that id' };
 
 export function registerDocumentRoutes(app: FastifyInstance, db: Db, mailyPublicUrl: string): void {
+  app.get('/api/archive/facets', async function facets() {
+    return listArchiveFacets(db);
+  });
   app.get('/api/documents', async function list(request, reply): Promise<DocumentPage | ErrorBody> {
     const parsed = parseDocumentListQuery(request.query as Record<string, unknown>);
     if (!parsed.ok) {

@@ -6,6 +6,7 @@ export interface ArchiveRow {
   id: string;
   source: DocumentSource;
   title: string;
+  purchasedItem: string | null;
   // "Invoice from mail, 25 Sep"
   detail: string;
   amount: string | null;
@@ -57,14 +58,12 @@ export function describeDocument(doc: ArchiveDocument, timeZone: string): Archiv
     amount = formatAmount(doc.amountMinor, doc.currency);
   }
   const day = formatDayShort(documentDay(doc, timeZone));
-  let detail = `${kind} ${SOURCE_PHRASES[doc.source]}, ${day}`;
-  if (doc.purchasedItem !== null) {
-    detail = `${detail} · ${doc.purchasedItem}`;
-  }
+  const detail = `${kind} ${SOURCE_PHRASES[doc.source]}, ${day}`;
   return {
     id: doc.id,
     source: doc.source,
     title,
+    purchasedItem: doc.purchasedItem,
     detail,
     amount,
   };

@@ -6,7 +6,14 @@ describe('parseRoute', () => {
     expect(parseRoute('/', '')).toEqual({ name: 'archive', view: 'recent' });
     expect(parseRoute('/shops', '')).toEqual({ name: 'archive', view: 'shops' });
     expect(parseRoute('/tags', '')).toEqual({ name: 'archive', view: 'tags' });
-    expect(parseRoute('/warranty', '')).toEqual({ name: 'archive', view: 'warranty' });
+    expect(parseRoute('/starred', '')).toEqual({ name: 'archive', view: 'starred' });
+    expect(parseRoute('/bills', '')).toEqual({ name: 'archive', view: 'bills' });
+    expect(parseRoute('/warranty', '')).toEqual({ name: 'archive', view: 'starred' });
+    expect(parseRoute('/shops', '?shop=Kiwi')).toEqual({
+      name: 'archive',
+      view: 'shops',
+      filter: 'Kiwi',
+    });
   });
 
   it('reads the search query', () => {
@@ -46,7 +53,8 @@ describe('routePath', () => {
   it('round-trips through parseRoute', () => {
     const routes: Route[] = [
       { name: 'archive', view: 'recent' },
-      { name: 'archive', view: 'warranty' },
+      { name: 'archive', view: 'starred' },
+      { name: 'archive', view: 'tags', filter: 'jobb' },
       { name: 'search', query: '' },
       { name: 'search', query: 'rema 1000 & kiwi' },
       { name: 'capture' },

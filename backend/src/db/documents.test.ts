@@ -12,6 +12,8 @@ function receipt(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     kind: 'invoice',
     merchant: 'Hafslund',
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: 149950,
     currency: 'NOK',
     issuedOn: '2026-09-01',

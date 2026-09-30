@@ -20,6 +20,10 @@ export interface DocumentListQuery {
   source: DocumentSource | null;
   // A simple text lookup until full document-text search is added.
   q: string | null;
+  shop: string | null;
+  tag: string | null;
+  starred: boolean;
+  bills: boolean;
   // true lists only soft-deleted documents (Recently deleted); false hides them.
   deleted: boolean;
   limit: number;
@@ -69,6 +73,10 @@ export function parseDocumentListQuery(
     kind: null,
     source: null,
     q: null,
+    shop: null,
+    tag: null,
+    starred: false,
+    bills: false,
     deleted: false,
     limit: DEFAULT_PAGE_SIZE,
     after: null,
@@ -93,6 +101,17 @@ export function parseDocumentListQuery(
         return { ok: false, error: 'q must be at most 200 characters' };
       }
       query.q = text === '' ? null : text;
+    } else if (key === 'shop' || key === 'tag') {
+      const text = value.trim();
+      if (text.length < 1 || text.length > 500) {
+        return { ok: false, error: `${key} must be 1 to 500 characters` };
+      }
+      query[key] = text;
+    } else if (key === 'starred' || key === 'bills') {
+      if (value !== 'true' && value !== 'false') {
+        return { ok: false, error: `${key} must be true or false` };
+      }
+      query[key] = value === 'true';
     } else if (key === 'deleted') {
       if (value !== 'true' && value !== 'false') {
         return { ok: false, error: 'deleted must be true or false' };

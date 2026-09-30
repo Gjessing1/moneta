@@ -24,7 +24,7 @@ describe('serving the web app', () => {
     const config = loadConfig({ LOG_LEVEL: 'silent' });
     const app = await buildApp({ ...config, webRoot }, openDatabase(':memory:'));
     try {
-      for (const url of ['/capture', '/d/4f1c2b', '/search?q=kiwi', '/warranty']) {
+      for (const url of ['/capture', '/d/4f1c2b', '/search?q=kiwi', '/starred']) {
         const res = await app.inject({ method: 'GET', url });
         expect(res.statusCode, url).toBe(200);
         expect(res.body, url).toContain('<title>Moneta</title>');

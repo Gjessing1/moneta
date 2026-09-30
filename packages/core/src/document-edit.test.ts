@@ -8,6 +8,8 @@ const doc: ArchiveDocument = {
   kind: 'invoice',
   merchant: 'Hafslund',
   purchasedItem: 'Heater',
+  tags: [],
+  starred: false,
   amountMinor: 149950,
   currency: 'NOK',
   issuedOn: '2026-09-01',

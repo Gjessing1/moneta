@@ -11,6 +11,8 @@ function doc(overrides: Partial<ArchiveDocument>): ArchiveDocument {
     kind: 'invoice',
     merchant: 'Fjordkraft',
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: 118400,
     currency: 'NOK',
     issuedOn: '2026-09-25',
@@ -36,6 +38,7 @@ describe('describeDocument', () => {
       id: doc({}).id,
       source: 'maily',
       title: 'Fjordkraft',
+      purchasedItem: null,
       detail: 'Invoice from mail, 25 Sep',
       amount: '1 184,00 kr',
     });
@@ -58,10 +61,12 @@ describe('describeDocument', () => {
     });
   });
 
-  it('shows what was bought beneath the shop', () => {
-    expect(describeDocument(doc({ purchasedItem: 'Headphones' }), OSLO).detail).toBe(
-      'Invoice from mail, 25 Sep · Headphones',
-    );
+  it('keeps what was bought beside the shop', () => {
+    expect(describeDocument(doc({ purchasedItem: 'Headphones' }), OSLO)).toMatchObject({
+      title: 'Fjordkraft',
+      purchasedItem: 'Headphones',
+      detail: 'Invoice from mail, 25 Sep',
+    });
   });
 });
 

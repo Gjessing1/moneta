@@ -4,11 +4,11 @@
 
 // The archive's ways of arranging documents. Recent is the timeline; the others
 // exist because a timeline can't find a purchase from two years ago.
-export const ARCHIVE_VIEWS = ['recent', 'shops', 'tags', 'warranty'] as const;
+export const ARCHIVE_VIEWS = ['recent', 'shops', 'tags', 'starred', 'bills'] as const;
 export type ArchiveView = (typeof ARCHIVE_VIEWS)[number];
 
 export type Route =
-  | { name: 'archive'; view: ArchiveView }
+  | { name: 'archive'; view: ArchiveView; filter?: string }
   | { name: 'search'; query: string }
   | { name: 'capture' }
   | { name: 'settings' }
@@ -25,14 +25,21 @@ const ARCHIVE_VIEW_PATHS: Record<ArchiveView, string> = {
   recent: '/',
   shops: '/shops',
   tags: '/tags',
-  warranty: '/warranty',
+  starred: '/starred',
+  bills: '/bills',
 };
 
 export function parseRoute(pathname: string, search: string): Route {
   const path = normalizePath(pathname);
 
+  if (path === '/warranty') return { name: 'archive', view: 'starred' };
+
   for (const view of ARCHIVE_VIEWS) {
     if (ARCHIVE_VIEW_PATHS[view] === path) {
+      if (view === 'shops' || view === 'tags') {
+        const filter = readQueryParam(search, view === 'shops' ? 'shop' : 'tag');
+        if (filter !== '') return { name: 'archive', view, filter };
+      }
       return { name: 'archive', view };
     }
   }
@@ -60,6 +67,9 @@ export function parseRoute(pathname: string, search: string): Route {
 export function routePath(route: Route): string {
   switch (route.name) {
     case 'archive':
+      if (route.filter && (route.view === 'shops' || route.view === 'tags')) {
+        return `${ARCHIVE_VIEW_PATHS[route.view]}?${route.view === 'shops' ? 'shop' : 'tag'}=${encodeURIComponent(route.filter)}`;
+      }
       return ARCHIVE_VIEW_PATHS[route.view];
     case 'search':
       if (route.query === '') {

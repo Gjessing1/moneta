@@ -20,6 +20,8 @@ export const EDITABLE_FIELDS = [
   'account',
   'iban',
   'notes',
+  'tags',
+  'starred',
 ] as const;
 export type EditableField = (typeof EDITABLE_FIELDS)[number];
 
@@ -104,6 +106,33 @@ function setField(patch: DocumentPatch, field: EditableField, value: unknown): s
         return `notes must be text of at most ${MAX_NOTES_LENGTH} characters`;
       }
       patch.notes = value;
+      return null;
+    case 'tags': {
+      if (!Array.isArray(value) || value.length > 20) {
+        return 'tags must be a list of at most 20 names';
+      }
+      const tags: string[] = [];
+      for (const entry of value) {
+        if (typeof entry !== 'string' || entry.trim().length < 1 || entry.trim().length > 50) {
+          return 'each tag must be 1 to 50 characters';
+        }
+        const tag = entry.trim();
+        if (
+          !tags.some(function same(existing) {
+            return existing.toLocaleLowerCase() === tag.toLocaleLowerCase();
+          })
+        ) {
+          tags.push(tag);
+        }
+      }
+      patch.tags = tags;
+      return null;
+    }
+    case 'starred':
+      if (typeof value !== 'boolean') {
+        return 'starred must be true or false';
+      }
+      patch.starred = value;
       return null;
   }
 }

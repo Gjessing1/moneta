@@ -58,7 +58,12 @@ function DocumentRow({ row }: { row: ArchiveRow }) {
           {/* The amount shares the title's line, so the detail below gets the
               row's full width on a narrow phone. */}
           <span className="doc-row__line">
-            <span className="doc-row__title">{row.title}</span>
+            <span className="doc-row__title">
+              {row.title}
+              {row.purchasedItem !== null && (
+                <span className="doc-row__item"> · {row.purchasedItem}</span>
+              )}
+            </span>
             {row.amount !== null && <span className="doc-row__amount">{row.amount}</span>}
           </span>
           <span className="doc-row__detail">{row.detail}</span>

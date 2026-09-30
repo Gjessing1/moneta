@@ -5,7 +5,8 @@ const VIEWS: { view: ArchiveView; label: string }[] = [
   { view: 'recent', label: 'Recent' },
   { view: 'shops', label: 'Shops' },
   { view: 'tags', label: 'Tags' },
-  { view: 'warranty', label: 'Warranty' },
+  { view: 'starred', label: 'Starred' },
+  { view: 'bills', label: 'Bills' },
 ];
 
 // Each view has its own URL, so a view survives reloads and can be linked to.

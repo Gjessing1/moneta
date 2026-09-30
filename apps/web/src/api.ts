@@ -33,6 +33,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export function fetchDocumentPage(
   after: string | null,
   q: string | null = null,
+  filters: { shop?: string; tag?: string; starred?: boolean; bills?: boolean } = {},
 ): Promise<DocumentPage> {
   const params = new URLSearchParams();
   if (after !== null) {
@@ -41,8 +42,20 @@ export function fetchDocumentPage(
   if (q !== null) {
     params.set('q', q);
   }
+  if (filters.shop) params.set('shop', filters.shop);
+  if (filters.tag) params.set('tag', filters.tag);
+  if (filters.starred) params.set('starred', 'true');
+  if (filters.bills) params.set('bills', 'true');
   const suffix = params.size > 0 ? `?${params}` : '';
   return request<DocumentPage>(`/api/documents${suffix}`);
+}
+
+export interface ArchiveFacet {
+  name: string;
+  count: number;
+}
+export function fetchArchiveFacets(): Promise<{ shops: ArchiveFacet[]; tags: ArchiveFacet[] }> {
+  return request('/api/archive/facets');
 }
 
 export function fetchDocument(id: string): Promise<DocumentDetail> {

@@ -17,6 +17,8 @@ function doc(issuedOn: string | null, capturedAt: string): ArchiveDocument {
     kind: 'receipt',
     merchant: null,
     purchasedItem: null,
+    tags: [],
+    starred: false,
     amountMinor: null,
     currency: null,
     issuedOn,
@@ -67,6 +69,10 @@ describe('parseDocumentListQuery', () => {
         kind: null,
         source: null,
         q: null,
+        shop: null,
+        tag: null,
+        starred: false,
+        bills: false,
         deleted: false,
         limit: DEFAULT_PAGE_SIZE,
         after: null,
@@ -89,6 +95,10 @@ describe('parseDocumentListQuery', () => {
         kind: 'receipt',
         source: 'camera',
         q: 'headphones',
+        shop: null,
+        tag: null,
+        starred: false,
+        bills: false,
         deleted: true,
         limit: 20,
         after: { sortKey: '2026-09-01', id: ID },
@@ -103,5 +113,7 @@ describe('parseDocumentListQuery', () => {
     expect(parseDocumentListQuery({ deleted: 'yes' })).toMatchObject({ ok: false });
     expect(parseDocumentListQuery({ kind: ['receipt', 'invoice'] })).toMatchObject({ ok: false });
     expect(parseDocumentListQuery({ q: 'x'.repeat(201) })).toMatchObject({ ok: false });
+    expect(parseDocumentListQuery({ starred: 'yes' })).toMatchObject({ ok: false });
+    expect(parseDocumentListQuery({ tag: '' })).toMatchObject({ ok: false });
   });
 });

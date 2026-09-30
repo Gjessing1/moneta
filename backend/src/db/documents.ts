@@ -20,6 +20,8 @@ interface DocumentRow {
   kind: DocumentKind;
   merchant: string | null;
   purchased_item: string | null;
+  tags: string;
+  starred: number;
   amount_minor: number | null;
   currency: string | null;
   issued_on: string | null;
@@ -59,6 +61,8 @@ function toDocument(row: DocumentRow): ArchiveDocument {
     kind: row.kind,
     merchant: row.merchant,
     purchasedItem: row.purchased_item,
+    tags: JSON.parse(row.tags) as string[],
+    starred: row.starred === 1,
     amountMinor: row.amount_minor,
     currency: row.currency,
     issuedOn: row.issued_on,
@@ -111,12 +115,12 @@ function toFile(row: FileRow): DocumentFile {
 export function insertDocument(db: Db, doc: ArchiveDocument): void {
   db.prepare(
     `INSERT INTO documents (
-       id, source, kind, merchant, purchased_item, amount_minor, currency, issued_on, due_on,
+       id, source, kind, merchant, purchased_item, tags, starred, amount_minor, currency, issued_on, due_on,
        kid, account, iban, notes, dedup_key, guessed,
        captured_at, created_at, updated_at, deleted_at,
        mail_from_name, mail_from_address, mail_subject, mail_received_at
      ) VALUES (
-       @id, @source, @kind, @merchant, @purchasedItem, @amountMinor, @currency, @issuedOn, @dueOn,
+       @id, @source, @kind, @merchant, @purchasedItem, @tags, @starred, @amountMinor, @currency, @issuedOn, @dueOn,
        @kid, @account, @iban, @notes, @dedupKey, @guessed,
        @capturedAt, @createdAt, @updatedAt, @deletedAt,
        @mailFromName, @mailFromAddress, @mailSubject, @mailReceivedAt
@@ -124,6 +128,8 @@ export function insertDocument(db: Db, doc: ArchiveDocument): void {
   ).run({
     ...doc,
     guessed: JSON.stringify(doc.guessed),
+    tags: JSON.stringify(doc.tags),
+    starred: Number(doc.starred),
     mailFromName: doc.mail?.fromName ?? null,
     mailFromAddress: doc.mail?.fromAddress ?? null,
     mailSubject: doc.mail?.subject ?? null,
@@ -164,12 +170,18 @@ export function updateDocument(db: Db, doc: ArchiveDocument): void {
   db.prepare(
     `UPDATE documents SET
        kind = @kind, merchant = @merchant, purchased_item = @purchasedItem,
+       tags = @tags, starred = @starred,
        amount_minor = @amountMinor,
        currency = @currency, issued_on = @issuedOn, due_on = @dueOn, kid = @kid,
        account = @account, iban = @iban, notes = @notes, guessed = @guessed,
        updated_at = @updatedAt, deleted_at = @deletedAt
      WHERE id = @id`,
-  ).run({ ...doc, guessed: JSON.stringify(doc.guessed) });
+  ).run({
+    ...doc,
+    guessed: JSON.stringify(doc.guessed),
+    tags: JSON.stringify(doc.tags),
+    starred: Number(doc.starred),
+  });
 }
 
 // Newest first. The ORDER BY must match documentSortKey in @moneta/core, which
@@ -189,6 +201,24 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
   if (query.source !== null) {
     conditions.push('source = @source');
     params.source = query.source;
+  }
+  if (query.shop !== null) {
+    conditions.push('merchant = @shop COLLATE NOCASE');
+    params.shop = query.shop;
+  }
+  if (query.tag !== null) {
+    conditions.push(
+      'EXISTS (SELECT 1 FROM json_each(documents.tags) WHERE value = @tag COLLATE NOCASE)',
+    );
+    params.tag = query.tag;
+  }
+  if (query.starred) {
+    conditions.push('starred = 1');
+  }
+  if (query.bills) {
+    conditions.push(
+      "source = 'maily' AND kind = 'invoice' AND NOT EXISTS (SELECT 1 FROM files WHERE files.document_id = documents.id)",
+    );
   }
   if (query.q !== null) {
     conditions.push(`(
@@ -222,6 +252,33 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
     nextCursor = encodeListCursor(last);
   }
   return { items, nextCursor };
+}
+
+export interface ArchiveFacet {
+  name: string;
+  count: number;
+}
+
+export function listArchiveFacets(db: Db): { shops: ArchiveFacet[]; tags: ArchiveFacet[] } {
+  const shops = db
+    .prepare(
+      `
+      SELECT MIN(merchant) AS name, COUNT(*) AS count FROM documents
+    WHERE deleted_at IS NULL AND merchant IS NOT NULL AND trim(merchant) <> ''
+    GROUP BY merchant COLLATE NOCASE ORDER BY count DESC, name COLLATE NOCASE
+  `,
+    )
+    .all() as ArchiveFacet[];
+  const tags = db
+    .prepare(
+      `
+      SELECT MIN(value) AS name, COUNT(*) AS count FROM documents, json_each(documents.tags)
+    WHERE deleted_at IS NULL GROUP BY value COLLATE NOCASE
+    ORDER BY count DESC, name COLLATE NOCASE
+  `,
+    )
+    .all() as ArchiveFacet[];
+  return { shops, tags };
 }
 
 export function insertFile(db: Db, file: DocumentFile): void {
