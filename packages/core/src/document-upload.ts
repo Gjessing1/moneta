@@ -1,6 +1,8 @@
 // Filing a new original: the parameters that come with PUT
 // /api/documents/:id/file, and the document a first upload creates.
 import {
+  isStorableContentType,
+  MAX_ORIGINAL_BYTES,
   isDocumentKind,
   type ArchiveDocument,
   type DocumentKind,
@@ -11,6 +13,49 @@ import {
 // maily documents come only through the import job (A13), never an upload.
 export const UPLOAD_SOURCES = ['camera', 'upload', 'share'] as const;
 export type UploadSource = (typeof UPLOAD_SOURCES)[number];
+
+// Some file pickers (notably for HEIC) leave File.type empty. The extension is
+// only a fallback for that case; the server still sends the result with nosniff.
+export function uploadContentType(name: string, reportedType: string): string | null {
+  const type = reportedType.toLowerCase();
+  if (isStorableContentType(type)) {
+    return type;
+  }
+  if (type !== '') {
+    return null;
+  }
+  const extension = name.toLowerCase().split('.').at(-1);
+  switch (extension) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'webp':
+      return 'image/webp';
+    case 'heic':
+      return 'image/heic';
+    case 'heif':
+      return 'image/heif';
+    default:
+      return null;
+  }
+}
+
+export function uploadFileError(name: string, type: string, size: number): string | null {
+  if (uploadContentType(name, type) === null) {
+    return `${name}: choose a PDF, JPEG, PNG, WebP or HEIC image`;
+  }
+  if (size === 0) {
+    return `${name}: the file is empty`;
+  }
+  if (size > MAX_ORIGINAL_BYTES) {
+    return `${name}: the file is larger than 50 MB`;
+  }
+  return null;
+}
 
 export interface UploadParams {
   source: UploadSource;

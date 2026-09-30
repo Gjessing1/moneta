@@ -36,11 +36,6 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
       are purged after 30 days. A deleted maily document is never imported again. The purge job
       also removes originals that no `files` row references (A15), e.g. left by a crash between
       storing the bytes and inserting the row. The soft delete and restore API already exist.
-- [ ] Manual upload: pick or drop one or more PDFs/images and file them. On desktop this is the
-      fallback for anything maily missed.
-- [ ] Camera capture: the Capture tab opens the rear camera in one tap (`capture="environment"`).
-      The photo is saved as a receipt awaiting details, and a short form (merchant, amount, date)
-      can be filled in then or later. Multi-page capture appends pages to the same document.
 - [ ] maily import (A13, A14): settle the body-only receipt decision first. Backfill every message
       maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), the sender, subject and received time go into `document.mail`, and the job is
       idempotent on the dedup key. When maily is down, the job logs it, retries later, and the

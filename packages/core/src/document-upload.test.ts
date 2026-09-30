@@ -1,5 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { newUploadedDocument, parseUploadParams } from './document-upload.js';
+import {
+  newUploadedDocument,
+  parseUploadParams,
+  uploadContentType,
+  uploadFileError,
+} from './document-upload.js';
+
+describe('upload file selection', () => {
+  it('accepts a reported type and a missing HEIC type, but rejects active content', () => {
+    expect(uploadContentType('receipt.jpg', 'image/jpeg')).toBe('image/jpeg');
+    expect(uploadContentType('receipt.HEIC', '')).toBe('image/heic');
+    expect(uploadContentType('receipt.pdf', 'text/html')).toBeNull();
+    expect(uploadFileError('receipt.svg', 'image/svg+xml', 100)).toContain('choose a PDF');
+  });
+
+  it('rejects empty and oversized files before upload', () => {
+    expect(uploadFileError('receipt.pdf', 'application/pdf', 0)).toContain('empty');
+    expect(uploadFileError('receipt.pdf', 'application/pdf', 50 * 1024 * 1024 + 1)).toContain(
+      '50 MB',
+    );
+  });
+});
 
 const NOW = '2026-09-29T20:00:00.000Z';
 const ID = '0d6f1c1e-6a3b-4c8e-9a52-2f0c4b1e7a10';

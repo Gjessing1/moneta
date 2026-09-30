@@ -1,6 +1,7 @@
 import type { DocumentDetail } from '@moneta/core/document';
 import type { DocumentPatch } from '@moneta/core/document-patch';
 import type { DocumentPage } from '@moneta/core/document-list';
+import type { UploadSource } from '@moneta/core/document-upload';
 
 // A failed API call, carrying the server's own explanation when it sent one.
 export class ApiError extends Error {
@@ -56,6 +57,25 @@ export function saveDocument(id: string, patch: DocumentPatch): Promise<Document
   });
 }
 
+export function uploadDocumentFile(
+  id: string,
+  file: File,
+  contentType: string,
+  source: UploadSource,
+  capturedAt: string,
+  kind?: 'invoice' | 'receipt' | 'other',
+): Promise<DocumentDetail> {
+  const params = new URLSearchParams({ source, capturedAt, fileName: file.name });
+  if (kind !== undefined) {
+    params.set('kind', kind);
+  }
+  return request<DocumentDetail>(`/api/documents/${encodeURIComponent(id)}/file?${params}`, {
+    method: 'PUT',
+    headers: { 'content-type': contentType },
+    body: file,
+  });
+}
+
 // Where a stored original is served; the position is its page order.
 export function fileUrl(documentId: string, position: number): string {
   return `/api/documents/${encodeURIComponent(documentId)}/file/${position}`;
@@ -63,6 +83,9 @@ export function fileUrl(documentId: string, position: number): string {
 
 export function describeError(err: unknown): string {
   if (err instanceof ApiError) {
+    return err.message;
+  }
+  if (err instanceof Error && !(err instanceof TypeError)) {
     return err.message;
   }
   // fetch() rejects only when the request never got an answer.

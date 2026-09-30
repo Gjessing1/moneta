@@ -259,6 +259,7 @@
   border-radius: 20px;
   background: var(--accent);
   color: var(--on-accent);
+  text-align: center;
 }
 
 .capture__camera:disabled {
@@ -284,6 +285,92 @@
 .capture__camera-hint {
   margin-top: -10px;
   font-size: 14px;
+}
+
+.capture__drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-list);
+  background: var(--surface);
+}
+
+.capture__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.capture__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+.capture__item + .capture__item {
+  border-top: 1px solid var(--line);
+}
+
+.capture__item .text-button {
+  flex-shrink: 0;
+}
+
+.capture__details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.capture__details .note {
+  grid-column: 1 / -1;
+}
+
+.capture__details label,
+.capture__kind {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.capture__details label:first-of-type {
+  grid-column: 1 / -1;
+}
+
+.capture__details input,
+.capture__kind select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.capture__error {
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.capture__success {
+  padding: 12px 16px;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--good);
+}
+
+.capture__success a {
+  text-decoration: underline;
 }
 
 @media (min-width: 900px) {
