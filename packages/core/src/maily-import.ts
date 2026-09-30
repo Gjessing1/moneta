@@ -8,6 +8,7 @@ export interface BillingExportItem {
   from: { name: string | null; address: string } | null;
   receivedAt: string | null;
   classifiedAt: string;
+  trashed: boolean;
   documents: {
     attachmentId: string;
     filename: string | null;

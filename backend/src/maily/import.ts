@@ -18,11 +18,13 @@ import {
   isDeletedImport,
   listFiles,
   nextFilePosition,
+  purgeDocument,
   updateDocument,
 } from '../db/documents.js';
 import { storeOriginal } from '../storage/originals.js';
 
 const INTERVAL_MS = 5 * 60 * 1000;
+const RECONCILE_MS = 60 * 60 * 1000;
 const PAGE_SIZE = 100;
 
 function getCursor(db: Db): string | null {
@@ -119,25 +121,35 @@ async function fetchNewFiles(
 export async function runMailyImport(
   db: Db,
   config: Pick<Config, 'mailyUrl' | 'dataDir'>,
+  fromStart = false,
 ): Promise<number> {
   if (config.mailyUrl === '') throw new Error('MAILY_URL is not configured');
-  let cursor = getCursor(db);
+  let cursor = fromStart ? null : getCursor(db);
   let imported = 0;
   while (true) {
     const page = await fetchPage(config.mailyUrl, cursor);
-    const prepared: { item: BillingExportItem; id: string; files: DocumentFile[] }[] = [];
+    const prepared: (
+      | { kind: 'import'; item: BillingExportItem; id: string; files: DocumentFile[] }
+      | { kind: 'remove'; id: string }
+    )[] = [];
     const now = new Date().toISOString();
     for (const item of page.items) {
       if (
         typeof item.messageId !== 'string' ||
         !Array.isArray(item.documents) ||
-        (item.kind !== 'invoice' && item.kind !== 'receipt')
+        (item.kind !== 'invoice' && item.kind !== 'receipt') ||
+        typeof item.trashed !== 'boolean'
       ) {
         throw new Error('maily billing feed returned an invalid item');
       }
       const key = mailyDedupKey(item.messageId);
+      const foundId = findByDedupKey(db, key);
+      if (item.trashed) {
+        if (foundId !== null) prepared.push({ kind: 'remove', id: foundId });
+        continue;
+      }
       if (isDeletedImport(db, key)) continue;
-      const id = findByDedupKey(db, key) ?? randomUUID();
+      const id = foundId ?? randomUUID();
       const existing = getDocument(db, id);
       if (existing?.deletedAt !== null && existing?.deletedAt !== undefined) continue;
       const files = await fetchNewFiles(
@@ -148,10 +160,19 @@ export async function runMailyImport(
         id,
         now,
       );
-      prepared.push({ item, id, files });
+      prepared.push({ kind: 'import', item, id, files });
     }
     db.transaction(function commitPage() {
       for (const entry of prepared) {
+        if (entry.kind === 'remove') {
+          const existing = getDocument(db, entry.id);
+          if (existing?.deletedAt !== null && existing?.deletedAt !== undefined) {
+            purgeDocument(db, entry.id, now);
+          } else {
+            db.prepare("DELETE FROM documents WHERE id = ? AND source = 'maily'").run(entry.id);
+          }
+          continue;
+        }
         const incoming = importedDocument(entry.id, entry.item, now);
         const existing = getDocument(db, entry.id);
         if (existing === undefined) insertDocument(db, incoming);
@@ -160,13 +181,15 @@ export async function runMailyImport(
           insertFile(db, { ...file, position: nextFilePosition(db, entry.id) });
         }
       }
-      if (page.cursor !== null) {
+      if (!fromStart && page.cursor !== null) {
         db.prepare(
           "INSERT INTO import_cursors (source, cursor, updated_at) VALUES ('maily', ?, ?) ON CONFLICT(source) DO UPDATE SET cursor = excluded.cursor, updated_at = excluded.updated_at",
         ).run(page.cursor, now);
       }
     })();
-    imported += prepared.length;
+    for (const entry of prepared) {
+      if (entry.kind === 'import') imported += 1;
+    }
     if (!page.hasMore) {
       recordSuccess(db, new Date().toISOString());
       return imported;
@@ -185,10 +208,17 @@ export function scheduleMailyImport(
   let timer: NodeJS.Timeout | undefined;
   let running: Promise<void> | null = null;
   let closing = false;
+  let lastReconcile = 0;
   function start() {
     if (closing) return;
     running = runMailyImport(db, config)
-      .then(function completed(count) {
+      .then(async function completed(count) {
+        // Moving mail to Trash does not reclassify it, so the forward cursor
+        // alone cannot notice that transition.
+        if (Date.now() - lastReconcile >= RECONCILE_MS) {
+          await runMailyImport(db, config, true);
+          lastReconcile = Date.now();
+        }
         app.log.info({ count }, 'maily import completed');
       })
       .catch(function failed(error: unknown) {

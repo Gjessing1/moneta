@@ -16,6 +16,7 @@ migrate(db);
 const attachment = Buffer.from('%PDF-1.4\nexample');
 let failAttachment = true;
 let version = 1;
+let trashedOne = false;
 let baseUrl = '';
 
 function item(id: string, kind: 'invoice' | 'receipt'): BillingExportItem {
@@ -26,6 +27,7 @@ function item(id: string, kind: 'invoice' | 'receipt'): BillingExportItem {
     from: { name: 'Power Co', address: 'bills@example.test' },
     receivedAt: '2026-06-01T12:00:00.000Z',
     classifiedAt: '2026-09-30T00:00:00.000Z',
+    trashed: id === 'one' && trashedOne,
     documents:
       id === 'one'
         ? [
@@ -69,7 +71,7 @@ const server = createServer(function respond(request, response) {
   let page: BillingExportPage;
   if (after === null) page = { items: [item('one', 'invoice')], cursor: 'first', hasMore: true };
   else if (after === 'first')
-    page = { items: [item('two', 'invoice')], cursor: 'second', hasMore: false };
+    page = { items: [item('two', 'invoice')], cursor: 'second', hasMore: version === 2 };
   else if (after === 'second' && version === 2)
     page = { items: [item('one', 'receipt')], cursor: 'third', hasMore: false };
   else page = { items: [], cursor: after, hasMore: false };
@@ -138,4 +140,18 @@ it('retries an incomplete page, imports facts-only bills, and preserves confirme
   expect(db.prepare('SELECT last_success_at, last_error FROM import_status').get()).toMatchObject({
     last_error: null,
   });
+
+  trashedOne = true;
+  expect(await runMailyImport(db, config, true)).toBe(1);
+  expect(getDocument(db, rows[0]!.id)).toBeUndefined();
+  expect(db.prepare('SELECT COUNT(*) AS count FROM deleted_imports').get()).toEqual({ count: 0 });
+  expect(db.prepare('SELECT cursor FROM import_cursors').get()).toEqual({ cursor: 'third' });
+
+  trashedOne = false;
+  expect(await runMailyImport(db, config, true)).toBe(3);
+  const restored = db.prepare("SELECT id FROM documents WHERE dedup_key = 'maily:one'").get() as {
+    id: string;
+  };
+  expect(getDocument(db, restored.id)?.kind).toBe('receipt');
+  expect(listFiles(db, restored.id)).toHaveLength(2);
 });
