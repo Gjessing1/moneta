@@ -416,3 +416,58 @@
     min-height: 220px;
   }
 }
+/* The undo action remains available while navigating away from a document. */
+.undo-bar {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 8px 24px #0004;
+}
+
+.undo-bar .text-button {
+  color: inherit;
+}
+
+.deleted-list {
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+.deleted-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+}
+.deleted-row + .deleted-row {
+  border-top: 1px solid var(--line);
+}
+.deleted-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 560px) {
+  .deleted-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 900px) {
+  .undo-bar {
+    bottom: 20px;
+  }
+}

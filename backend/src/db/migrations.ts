@@ -75,4 +75,11 @@ export const MIGRATIONS: readonly string[] = [
   CREATE INDEX documents_merchant ON documents (merchant) WHERE deleted_at IS NULL;
   CREATE INDEX documents_starred ON documents (starred) WHERE deleted_at IS NULL;
   `,
+  // Keep a maily dedup key after a hard purge, so a later feed replay cannot
+  // bring back a document the user explicitly deleted.
+  `CREATE TABLE deleted_imports (
+    dedup_key TEXT PRIMARY KEY,
+    deleted_at TEXT NOT NULL
+  ) STRICT;
+  CREATE INDEX documents_deleted_at ON documents (deleted_at) WHERE deleted_at IS NOT NULL;`,
 ];

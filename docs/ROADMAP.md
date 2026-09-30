@@ -23,11 +23,6 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] Delete and restore: delete from the document (with a confirmation) or from a multi-select,
-      then an undo bar. Settings › Recently deleted lists them with Restore and "Delete now"; they
-      are purged after 30 days. A deleted maily document is never imported again. The purge job
-      also removes originals that no `files` row references (A15), e.g. left by a crash between
-      storing the bytes and inserting the row. The soft delete and restore API already exist.
 - [ ] maily import (A13, A14, A18): backfill every message
       maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), the sender, subject and received time go into `document.mail`, and the job is
       idempotent on the dedup key. Import messages without document attachments as facts-only
@@ -75,7 +70,8 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
       every merchant.
 - [~] Tags/categories: editable free-form tags, counts and exact filters work. Left: suggest tags
       from the merchant's earlier documents; Settings › Tags renames, merges and removes them.
-- [ ] Select several: long-press enters select mode; tag, export or delete the selection.
+- [~] Select several: the Select documents button and deleting a selection work. Left: long-press
+      enters select mode; tag or export the selection.
 
 ## 5. Capture quality
 

@@ -41,6 +41,12 @@
   flex-shrink: 0;
   margin-top: -8px;
 }
+
+.document__delete-link {
+  flex-shrink: 0;
+  margin-top: -8px;
+  color: var(--danger);
+}
 .document__tags {
   display: flex;
   flex-wrap: wrap;

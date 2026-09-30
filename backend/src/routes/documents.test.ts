@@ -8,7 +8,7 @@ import type { DocumentPage } from '@moneta/core/document-list';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config.js';
 import { migrate, openDatabase, type Db } from '../db/database.js';
-import { insertDocument, insertFile } from '../db/documents.js';
+import { insertDocument, insertFile, isDeletedImport } from '../db/documents.js';
 import { originalPath } from '../storage/originals.js';
 
 const ID = '0d6f1c1e-6a3b-4c8e-9a52-2f0c4b1e7a10';
@@ -355,6 +355,39 @@ describe('GET /api/documents', () => {
     expect(await ids('?deleted=true')).toEqual(['3']);
   });
 
+  it('pages recently deleted by deletion time', async () => {
+    const { app, db } = await setup();
+    const first = `${ID.slice(0, -1)}1`;
+    const second = `${ID.slice(0, -1)}2`;
+    insertDocument(
+      db,
+      stored({ id: first, issuedOn: '2026-09-20', deletedAt: '2026-09-21T08:00:00.000Z' }),
+    );
+    insertDocument(
+      db,
+      stored({ id: second, issuedOn: '2026-09-01', deletedAt: '2026-09-22T08:00:00.000Z' }),
+    );
+    const page = (
+      await app.inject({ method: 'GET', url: '/api/documents?deleted=true&limit=1' })
+    ).json<DocumentPage>();
+    expect(
+      page.items.map(function id(doc) {
+        return doc.id;
+      }),
+    ).toEqual([second]);
+    const next = (
+      await app.inject({
+        method: 'GET',
+        url: `/api/documents?deleted=true&limit=1&after=${encodeURIComponent(page.nextCursor as string)}`,
+      })
+    ).json<DocumentPage>();
+    expect(
+      next.items.map(function id(doc) {
+        return doc.id;
+      }),
+    ).toEqual([first]);
+  });
+
   it('refuses a malformed query', async () => {
     const { app } = await setup();
     for (const query of ['?limit=0', '?kind=bill', '?after=nonsense', '?kind=a&kind=b']) {
@@ -487,5 +520,16 @@ describe('DELETE /api/documents/:id and restore', () => {
     );
     const restore = await app.inject({ method: 'POST', url: `/api/documents/${ID}/restore` });
     expect(restore.statusCode).toBe(404);
+  });
+
+  it('permanently deletes only a trashed document and keeps its maily key', async () => {
+    const { app, db } = await setup();
+    insertDocument(db, stored({ dedupKey: 'maily:keep-gone' }));
+    const url = `/api/documents/${ID}`;
+    expect((await app.inject({ method: 'DELETE', url: `${url}/permanent` })).statusCode).toBe(409);
+    await app.inject({ method: 'DELETE', url });
+    expect((await app.inject({ method: 'DELETE', url: `${url}/permanent` })).statusCode).toBe(200);
+    expect((await app.inject({ method: 'GET', url })).statusCode).toBe(404);
+    expect(isDeletedImport(db, 'maily:keep-gone')).toBe(true);
   });
 });

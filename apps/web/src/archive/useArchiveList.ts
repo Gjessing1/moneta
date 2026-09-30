@@ -20,6 +20,11 @@ export interface ArchiveListState {
 // position, and the first page is re-checked in the background.
 let remembered: { items: ArchiveDocument[]; nextCursor: string | null } | null = null;
 
+export function archiveChanged(): void {
+  remembered = null;
+  window.dispatchEvent(new Event('moneta:documents-changed'));
+}
+
 function initialState(view: ArchiveView): ArchiveListState {
   if (view === 'recent' && remembered !== null) {
     return { ...remembered, status: 'ready', error: null, loadingMore: false, moreError: null };
@@ -100,6 +105,23 @@ export function useArchiveList(
       };
     },
     [attempt, view, filter],
+  );
+
+  useEffect(
+    function refreshAfterChange() {
+      function refresh() {
+        generation.current += 1;
+        setState(initialState(view));
+        setAttempt(function next(n) {
+          return n + 1;
+        });
+      }
+      window.addEventListener('moneta:documents-changed', refresh);
+      return function stop() {
+        window.removeEventListener('moneta:documents-changed', refresh);
+      };
+    },
+    [view],
   );
 
   useEffect(

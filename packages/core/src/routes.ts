@@ -12,6 +12,7 @@ export type Route =
   | { name: 'search'; query: string }
   | { name: 'capture' }
   | { name: 'settings' }
+  | { name: 'recentlyDeleted' }
   | { name: 'document'; id: string }
   // The document's original full screen, for pinch zoom. A route of its own so
   // the back button (the browser's, and Android's through history) closes it.
@@ -52,6 +53,9 @@ export function parseRoute(pathname: string, search: string): Route {
   if (path === '/settings') {
     return { name: 'settings' };
   }
+  if (path === '/settings/deleted') {
+    return { name: 'recentlyDeleted' };
+  }
 
   const documentMatch = /^\/d\/([^/]+)(\/original)?$/.exec(path);
   if (documentMatch?.[1]) {
@@ -80,6 +84,8 @@ export function routePath(route: Route): string {
       return '/capture';
     case 'settings':
       return '/settings';
+    case 'recentlyDeleted':
+      return '/settings/deleted';
     case 'document':
       return `/d/${encodeURIComponent(route.id)}`;
     case 'original':
@@ -101,6 +107,7 @@ export function sectionOf(route: Route): Section | null {
     case 'capture':
       return 'capture';
     case 'settings':
+    case 'recentlyDeleted':
       return 'settings';
     case 'notFound':
       return null;

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DocumentDetail } from '@moneta/core/document';
 import { describeDocumentView } from '@moneta/core/document-view';
-import { describeError, fileUrl, saveDocument } from '../api';
+import { deleteDocument, describeError, fileUrl, restoreDocument, saveDocument } from '../api';
 import { EmptyState } from '../frame/EmptyState';
 import { BackIcon } from '../icons';
 import { BackLink, Link, navigate } from '../router';
@@ -13,6 +13,7 @@ import { OriginalViewer } from './OriginalViewer';
 import { closePdfs } from './pdf';
 import { SourceBlock } from './SourceBlock';
 import { useDocument } from './useDocument';
+import { archiveChanged } from '../archive/useArchiveList';
 
 // The device's zone: dates are stored in UTC and converted only here.
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -20,7 +21,15 @@ const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // One document: facts for quick lookup, then the original, provenance and
 // download/share. `viewer` is the full-screen original (/d/:id/original),
 // drawn over this screen.
-export function DocumentScreen({ id, viewer }: { id: string; viewer: boolean }) {
+export function DocumentScreen({
+  id,
+  viewer,
+  onDeleted,
+}: {
+  id: string;
+  viewer: boolean;
+  onDeleted: (ids: string[], label: string) => void;
+}) {
   const state = useDocument(id);
 
   useEffect(function freePdfsOnLeave() {
@@ -28,7 +37,7 @@ export function DocumentScreen({ id, viewer }: { id: string; viewer: boolean }) 
   }, []);
 
   if (state.status === 'ready') {
-    return <DocumentBody detail={state.detail} viewer={viewer} />;
+    return <DocumentBody detail={state.detail} viewer={viewer} onDeleted={onDeleted} />;
   }
 
   let body;
@@ -76,11 +85,20 @@ export function DocumentScreen({ id, viewer }: { id: string; viewer: boolean }) 
   );
 }
 
-function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: boolean }) {
+function DocumentBody({
+  detail,
+  viewer,
+  onDeleted,
+}: {
+  detail: DocumentDetail;
+  viewer: boolean;
+  onDeleted: (ids: string[], label: string) => void;
+}) {
   const [current, setCurrent] = useState(detail);
   const [editing, setEditing] = useState(false);
   const [starError, setStarError] = useState<string | null>(null);
   const [savingStar, setSavingStar] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { document: doc, files, mailUrl } = current;
   const view = useMemo(
     function describe() {
@@ -149,6 +167,26 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
             >
               Edit
             </button>
+            <button
+              type="button"
+              className="text-button document__delete-link"
+              disabled={deleting}
+              onClick={async function remove() {
+                if (!window.confirm(`Move “${view.title}” to Recently deleted?`)) return;
+                setDeleting(true);
+                setStarError(null);
+                try {
+                  await deleteDocument(doc.id);
+                  onDeleted([doc.id], 'Document deleted');
+                  navigate({ name: 'archive', view: 'recent' }, { replace: true });
+                } catch (error) {
+                  setStarError(describeError(error));
+                  setDeleting(false);
+                }
+              }}
+            >
+              Delete
+            </button>
           </>
         )}
       </header>
@@ -159,7 +197,21 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
       )}
       {view.deleted !== null && (
         <p className="document__deleted" role="status">
-          {view.deleted}. It stays out of the archive until it is restored.
+          {view.deleted}. It stays out of the archive until it is restored.{' '}
+          <button
+            type="button"
+            className="text-button"
+            onClick={async function restore() {
+              try {
+                setCurrent(await restoreDocument(doc.id));
+                archiveChanged();
+              } catch (error) {
+                setStarError(describeError(error));
+              }
+            }}
+          >
+            Restore
+          </button>
         </p>
       )}
       {editing && (

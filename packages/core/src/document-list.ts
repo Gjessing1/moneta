@@ -47,10 +47,11 @@ export function documentSortKey(doc: ArchiveDocument): string {
   return doc.issuedOn ?? doc.capturedAt;
 }
 
-// Keyset paging instead of an offset, so a document filed while someone
-// scrolls can't shift the pages and show an item twice or skip one.
-export function encodeListCursor(doc: ArchiveDocument): string {
-  return `${documentSortKey(doc)}|${doc.id}`;
+// Keyset paging instead of an offset, so an inserted document cannot shift
+// pages. Recently deleted uses deletion time rather than the document date.
+export function encodeListCursor(doc: ArchiveDocument, deleted = false): string {
+  const sortKey = deleted ? doc.deletedAt : documentSortKey(doc);
+  return `${sortKey}|${doc.id}`;
 }
 
 export function decodeListCursor(cursor: string): DocumentListCursor | null {

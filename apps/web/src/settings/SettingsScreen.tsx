@@ -1,5 +1,6 @@
 import { THEME_PREFERENCES, type ThemePreference } from '@moneta/core/theme';
 import { useHealth } from './useHealth';
+import { Link } from '../router';
 
 const THEME_LABELS: Record<ThemePreference, string> = {
   system: 'System',
@@ -47,6 +48,17 @@ export function SettingsScreen({
           })}
         </fieldset>
         <p className="note">System follows your phone or computer.</p>
+      </section>
+
+      <section className="settings-section" aria-labelledby="archive-heading">
+        <h2 id="archive-heading" className="section-title">
+          Archive
+        </h2>
+        <div className="list">
+          <Link className="facet-row" to={{ name: 'recentlyDeleted' }}>
+            Recently deleted
+          </Link>
+        </div>
       </section>
 
       <section className="settings-section" aria-labelledby="about-heading">

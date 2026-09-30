@@ -10,6 +10,9 @@ interface RecentListProps {
   loadingMore: boolean;
   moreError: string | null;
   onLoadMore: () => void;
+  selecting?: boolean;
+  selected?: ReadonlySet<string>;
+  onSelect?: (id: string) => void;
 }
 
 // The device's zone: dates are stored in UTC and converted only here.
@@ -19,7 +22,16 @@ const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 // scrolling at a normal pace never reaches a spinner.
 const PRELOAD_MARGIN = '1200px';
 
-export function RecentList({ docs, hasMore, loadingMore, moreError, onLoadMore }: RecentListProps) {
+export function RecentList({
+  docs,
+  hasMore,
+  loadingMore,
+  moreError,
+  onLoadMore,
+  selecting = false,
+  selected,
+  onSelect,
+}: RecentListProps) {
   const groups = useMemo(
     function group() {
       return groupByMonth(docs, TIME_ZONE);
@@ -38,7 +50,15 @@ export function RecentList({ docs, hasMore, loadingMore, moreError, onLoadMore }
             </h2>
             <ul className="list doc-list">
               {group.rows.map(function renderRow(row) {
-                return <DocumentRow key={row.id} row={row} />;
+                return (
+                  <DocumentRow
+                    key={row.id}
+                    row={row}
+                    selecting={selecting}
+                    selected={selected?.has(row.id) ?? false}
+                    onSelect={onSelect}
+                  />
+                );
               })}
             </ul>
           </section>
@@ -49,9 +69,31 @@ export function RecentList({ docs, hasMore, loadingMore, moreError, onLoadMore }
   );
 }
 
-function DocumentRow({ row }: { row: ArchiveRow }) {
+function DocumentRow({
+  row,
+  selecting,
+  selected,
+  onSelect,
+}: {
+  row: ArchiveRow;
+  selecting: boolean;
+  selected: boolean;
+  onSelect?: (id: string) => void;
+}) {
   return (
     <li>
+      {selecting && (
+        <label className="doc-row__select">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={function toggle() {
+              onSelect?.(row.id);
+            }}
+            aria-label={`Select ${row.title}`}
+          />
+        </label>
+      )}
       <Link to={{ name: 'document', id: row.id }} className="doc-row">
         <SourceBadge source={row.source} />
         <span className="doc-row__text">

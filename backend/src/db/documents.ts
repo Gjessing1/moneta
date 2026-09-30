@@ -184,9 +184,10 @@ export function updateDocument(db: Db, doc: ArchiveDocument): void {
   });
 }
 
-// Newest first. The ORDER BY must match documentSortKey in @moneta/core, which
-// writes the cursor this query resumes from.
+// The ORDER BY must match encodeListCursor in @moneta/core, which writes the
+// cursor this query resumes from. Deleted lists use their deletion time.
 export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
+  const sortExpression = query.deleted ? 'deleted_at' : 'COALESCE(issued_on, captured_at)';
   const conditions: string[] = [];
   const params: Record<string, string | number> = { limit: query.limit + 1 };
   if (query.deleted) {
@@ -229,14 +230,14 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
     params.q = query.q;
   }
   if (query.after !== null) {
-    conditions.push('(COALESCE(issued_on, captured_at), id) < (@afterKey, @afterId)');
+    conditions.push(`(${sortExpression}, id) < (@afterKey, @afterId)`);
     params.afterKey = query.after.sortKey;
     params.afterId = query.after.id;
   }
   const rows = db
     .prepare(
       `SELECT * FROM documents WHERE ${conditions.join(' AND ')}
-       ORDER BY COALESCE(issued_on, captured_at) DESC, id DESC
+       ORDER BY ${sortExpression} DESC, id DESC
        LIMIT @limit`,
     )
     .all(params) as DocumentRow[];
@@ -249,7 +250,7 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
   let nextCursor: string | null = null;
   const last = items[items.length - 1];
   if (rows.length > query.limit && last !== undefined) {
-    nextCursor = encodeListCursor(last);
+    nextCursor = encodeListCursor(last, query.deleted);
   }
   return { items, nextCursor };
 }
@@ -334,4 +335,40 @@ export function nextFilePosition(db: Db, documentId: string): number {
     .prepare('SELECT COALESCE(MAX(position) + 1, 0) AS next FROM files WHERE document_id = ?')
     .get(documentId) as { next: number };
   return row.next;
+}
+
+export function purgeDocument(db: Db, id: string, now: string): boolean {
+  return db.transaction(function purge(): boolean {
+    const doc = getDocument(db, id);
+    if (doc === undefined || doc.deletedAt === null) return false;
+    if (doc.dedupKey !== null) {
+      db.prepare('INSERT OR IGNORE INTO deleted_imports (dedup_key, deleted_at) VALUES (?, ?)').run(
+        doc.dedupKey,
+        now,
+      );
+    }
+    db.prepare('DELETE FROM documents WHERE id = ?').run(id);
+    return true;
+  })();
+}
+
+export function purgeExpiredDocuments(db: Db, cutoff: string, now: string): number {
+  const rows = db
+    .prepare('SELECT id FROM documents WHERE deleted_at IS NOT NULL AND deleted_at <= ?')
+    .all(cutoff) as { id: string }[];
+  let count = 0;
+  for (const row of rows) {
+    if (purgeDocument(db, row.id, now)) count += 1;
+  }
+  return count;
+}
+
+export function originalIsReferenced(db: Db, sha256: string): boolean {
+  return db.prepare('SELECT 1 FROM files WHERE sha256 = ? LIMIT 1').get(sha256) !== undefined;
+}
+
+export function isDeletedImport(db: Db, dedupKey: string): boolean {
+  return (
+    db.prepare('SELECT 1 FROM deleted_imports WHERE dedup_key = ?').get(dedupKey) !== undefined
+  );
 }

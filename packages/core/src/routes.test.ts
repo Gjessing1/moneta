@@ -59,6 +59,7 @@ describe('routePath', () => {
       { name: 'search', query: 'rema 1000 & kiwi' },
       { name: 'capture' },
       { name: 'settings' },
+      { name: 'recentlyDeleted' },
       { name: 'document', id: 'a/b c' },
       { name: 'original', id: 'a/b c' },
     ];

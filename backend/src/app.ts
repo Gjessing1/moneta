@@ -6,6 +6,7 @@ import type { Config } from './config.js';
 import type { Db } from './db/database.js';
 import { registerDocumentFileRoutes } from './routes/document-files.js';
 import { registerDocumentRoutes } from './routes/documents.js';
+import { schedulePurge } from './purge.js';
 
 export async function buildApp(config: Config, db: Db) {
   const app = Fastify({ logger: { level: config.logLevel } });
@@ -16,6 +17,7 @@ export async function buildApp(config: Config, db: Db) {
 
   registerDocumentRoutes(app, db, config.mailyPublicUrl);
   registerDocumentFileRoutes(app, db, config.dataDir, config.mailyPublicUrl);
+  schedulePurge(app, db, config.dataDir);
 
   if (existsSync(config.webRoot)) {
     await app.register(fastifyStatic, { root: config.webRoot });

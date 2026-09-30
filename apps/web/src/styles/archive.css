@@ -41,6 +41,35 @@
   border-top: 1px solid var(--line);
 }
 
+.doc-list > li {
+  display: flex;
+  align-items: center;
+}
+
+.doc-list .doc-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-row__select {
+  display: flex;
+  align-items: center;
+  padding: 16px 0 16px 14px;
+}
+
+.doc-row__select input {
+  width: 20px;
+  height: 20px;
+}
+
+.archive-selection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 8px 8px;
+}
+
 .doc-row:hover {
   background: var(--paper);
 }

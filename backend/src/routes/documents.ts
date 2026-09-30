@@ -11,6 +11,7 @@ import {
   getDocumentDetail,
   listArchiveFacets,
   listDocuments,
+  purgeDocument,
   updateDocument,
 } from '../db/documents.js';
 
@@ -96,6 +97,21 @@ export function registerDocumentRoutes(app: FastifyInstance, db: Db, mailyPublic
         updateDocument(db, { ...doc, deletedAt: null, updatedAt: new Date().toISOString() });
       }
       return getDocumentDetail(db, doc.id, mailyPublicUrl) as DocumentDetail;
+    },
+  );
+
+  app.delete<{ Params: IdParams }>(
+    '/api/documents/:id/permanent',
+    async function deleteNow(request, reply): Promise<{ ok: true } | ErrorBody> {
+      const doc = getDocument(db, request.params.id);
+      if (doc === undefined) return reply.code(404).send(NOT_FOUND);
+      if (doc.deletedAt === null) {
+        return reply
+          .code(409)
+          .send({ error: 'delete the document before deleting it permanently' });
+      }
+      purgeDocument(db, doc.id, new Date().toISOString());
+      return { ok: true };
     },
   );
 }

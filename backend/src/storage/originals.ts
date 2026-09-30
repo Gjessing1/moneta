@@ -2,7 +2,7 @@
 // the SHA-256 alone, and a stored file is never modified.
 import { createHash, randomUUID } from 'node:crypto';
 import { createWriteStream, existsSync } from 'node:fs';
-import { mkdir, rename, rm } from 'node:fs/promises';
+import { mkdir, readdir, rename, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Transform, type Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -71,4 +71,41 @@ export async function storeOriginal(
     await rm(tmpFile, { force: true });
     throw err;
   }
+}
+
+// Young files may belong to an upload that has stored its bytes but has not
+// committed its files row yet. A failed upload's orphan is collected next run.
+export async function removeUnreferencedOriginals(
+  dataDir: string,
+  isReferenced: (sha256: string) => boolean,
+  olderThan: number,
+): Promise<number> {
+  const root = join(dataDir, 'originals');
+  let prefixes;
+  try {
+    prefixes = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if (isMissing(error)) return 0;
+    throw error;
+  }
+  let removed = 0;
+  for (const prefix of prefixes) {
+    if (!prefix.isDirectory() || !/^[a-f0-9]{2}$/.test(prefix.name)) continue;
+    const folder = join(root, prefix.name);
+    for (const entry of await readdir(folder, { withFileTypes: true })) {
+      if (!entry.isFile() || !/^[a-f0-9]{64}$/.test(entry.name)) continue;
+      if (entry.name.slice(0, 2) !== prefix.name || isReferenced(entry.name)) continue;
+      const path = join(folder, entry.name);
+      if ((await stat(path)).mtimeMs > olderThan) continue;
+      // Recheck after the async stat: an upload may have committed meanwhile.
+      if (isReferenced(entry.name)) continue;
+      await rm(path);
+      removed += 1;
+    }
+  }
+  return removed;
+}
+
+function isMissing(error: unknown): boolean {
+  return error instanceof Error && 'code' in error && error.code === 'ENOENT';
 }

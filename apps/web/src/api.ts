@@ -33,7 +33,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export function fetchDocumentPage(
   after: string | null,
   q: string | null = null,
-  filters: { shop?: string; tag?: string; starred?: boolean; bills?: boolean } = {},
+  filters: {
+    shop?: string;
+    tag?: string;
+    starred?: boolean;
+    bills?: boolean;
+    deleted?: boolean;
+  } = {},
 ): Promise<DocumentPage> {
   const params = new URLSearchParams();
   if (after !== null) {
@@ -46,6 +52,7 @@ export function fetchDocumentPage(
   if (filters.tag) params.set('tag', filters.tag);
   if (filters.starred) params.set('starred', 'true');
   if (filters.bills) params.set('bills', 'true');
+  if (filters.deleted) params.set('deleted', 'true');
   const suffix = params.size > 0 ? `?${params}` : '';
   return request<DocumentPage>(`/api/documents${suffix}`);
 }
@@ -68,6 +75,18 @@ export function saveDocument(id: string, patch: DocumentPatch): Promise<Document
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(patch),
   });
+}
+
+export function deleteDocument(id: string): Promise<DocumentDetail> {
+  return request(`/api/documents/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export function restoreDocument(id: string): Promise<DocumentDetail> {
+  return request(`/api/documents/${encodeURIComponent(id)}/restore`, { method: 'POST' });
+}
+
+export function deleteDocumentNow(id: string): Promise<{ ok: true }> {
+  return request(`/api/documents/${encodeURIComponent(id)}/permanent`, { method: 'DELETE' });
 }
 
 export function uploadDocumentFile(

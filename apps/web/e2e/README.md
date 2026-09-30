@@ -21,3 +21,7 @@ docker run --rm --network host -v "$PWD":/work \
 ```
 
 The test expects an empty database and uses filenames and document facts prefixed with `Test`.
+
+`apps/web/e2e/delete.mjs` uses the same temporary backend and Playwright command, replacing
+`capture.mjs` with `delete.mjs`. It checks delete confirmation, undo, deleting a selection, Restore
+and Delete now through Settings › Recently deleted.
