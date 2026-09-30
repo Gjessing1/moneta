@@ -49,6 +49,10 @@
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"
     },
+    "./shop-name": {
+      "types": "./dist/shop-name.d.ts",
+      "default": "./dist/shop-name.js"
+    },
     "./theme": {
       "types": "./dist/theme.d.ts",
       "default": "./dist/theme.js"

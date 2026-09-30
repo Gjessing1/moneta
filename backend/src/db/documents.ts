@@ -203,6 +203,14 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
     conditions.push('source = @source');
     params.source = query.source;
   }
+  if (query.from !== null) {
+    conditions.push(`substr(${sortExpression}, 1, 10) >= @from`);
+    params.from = query.from;
+  }
+  if (query.to !== null) {
+    conditions.push(`substr(${sortExpression}, 1, 10) <= @to`);
+    params.to = query.to;
+  }
   if (query.shop !== null) {
     conditions.push('merchant = @shop COLLATE NOCASE');
     params.shop = query.shop;
@@ -230,14 +238,16 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
     params.q = query.q;
   }
   if (query.after !== null) {
-    conditions.push(`(${sortExpression}, id) < (@afterKey, @afterId)`);
+    const comparison = query.sort === 'oldest' ? '>' : '<';
+    conditions.push(`(${sortExpression}, id) ${comparison} (@afterKey, @afterId)`);
     params.afterKey = query.after.sortKey;
     params.afterId = query.after.id;
   }
+  const direction = query.sort === 'oldest' ? 'ASC' : 'DESC';
   const rows = db
     .prepare(
       `SELECT * FROM documents WHERE ${conditions.join(' AND ')}
-       ORDER BY ${sortExpression} DESC, id DESC
+       ORDER BY ${sortExpression} ${direction}, id ${direction}
        LIMIT @limit`,
     )
     .all(params) as DocumentRow[];
@@ -253,6 +263,35 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
     nextCursor = encodeListCursor(last, query.deleted);
   }
   return { items, nextCursor };
+}
+
+export interface ArchiveMonth {
+  month: string;
+  count: number;
+}
+
+export function listArchiveMonths(db: Db, query: DocumentListQuery): ArchiveMonth[] {
+  const conditions = ['deleted_at IS NULL'];
+  const params: Record<string, string> = {};
+  if (query.kind !== null) {
+    conditions.push('kind = @kind');
+    params.kind = query.kind;
+  }
+  if (query.source !== null) {
+    conditions.push('source = @source');
+    params.source = query.source;
+  }
+  if (query.shop !== null) {
+    conditions.push('merchant = @shop COLLATE NOCASE');
+    params.shop = query.shop;
+  }
+  return db
+    .prepare(
+      `SELECT substr(COALESCE(issued_on, captured_at), 1, 7) AS month, COUNT(*) AS count
+       FROM documents WHERE ${conditions.join(' AND ')}
+       GROUP BY month ORDER BY month DESC`,
+    )
+    .all(params) as ArchiveMonth[];
 }
 
 export interface ArchiveFacet {
@@ -280,6 +319,36 @@ export function listArchiveFacets(db: Db): { shops: ArchiveFacet[]; tags: Archiv
     )
     .all() as ArchiveFacet[];
   return { shops, tags };
+}
+
+export function displayShopName(db: Db, original: string | null): string | null {
+  if (original === null) return null;
+  const row = db
+    .prepare('SELECT display_name FROM shop_names WHERE original = ? COLLATE NOCASE')
+    .get(original) as { display_name: string } | undefined;
+  return row?.display_name ?? original;
+}
+
+// A rename covers the current group and sender names imported later. The
+// mapping keeps source names intact in the mail provenance block.
+export function renameShop(db: Db, from: string, to: string, now: string): number {
+  return db.transaction(function applyRename() {
+    const count = db
+      .prepare('SELECT COUNT(*) AS count FROM documents WHERE merchant = ? COLLATE NOCASE')
+      .get(from) as { count: number };
+    if (count.count === 0) return 0;
+    db.prepare('UPDATE shop_names SET display_name = ? WHERE display_name = ? COLLATE NOCASE').run(
+      to,
+      from,
+    );
+    db.prepare(
+      'INSERT INTO shop_names (original, display_name) VALUES (?, ?) ON CONFLICT(original) DO UPDATE SET display_name = excluded.display_name',
+    ).run(from, to);
+    db.prepare(
+      'UPDATE documents SET merchant = ?, updated_at = ? WHERE merchant = ? COLLATE NOCASE',
+    ).run(to, now, from);
+    return count.count;
+  })();
 }
 
 export function insertFile(db: Db, file: DocumentFile): void {

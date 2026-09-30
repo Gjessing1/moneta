@@ -1,27 +1,60 @@
 import { useEffect, useState } from 'react';
-import type { ArchiveView } from '@moneta/core/routes';
-import { deleteDocument, fetchArchiveFacets, describeError, type ArchiveFacet } from '../api';
+import type { ArchiveView, RecentBrowse } from '@moneta/core/routes';
+import {
+  deleteDocument,
+  fetchArchiveFacets,
+  renameShop,
+  describeError,
+  type ArchiveFacet,
+} from '../api';
 import { EmptyState } from '../frame/EmptyState';
 import { SearchIcon } from '../icons';
-import { Link } from '../router';
+import { Link, navigate } from '../router';
 import { RecentList } from './RecentList';
-import { useArchiveList } from './useArchiveList';
+import { RecentBrowseControls } from './RecentBrowseControls';
+import { archiveChanged, useArchiveList } from './useArchiveList';
 import { ViewTabs } from './ViewTabs';
 
 export function ArchiveScreen({
   view,
   filter,
+  browse,
   onDeleted,
 }: {
   view: ArchiveView;
   filter?: string;
+  browse?: RecentBrowse;
   onDeleted: (ids: string[], label: string) => void;
 }) {
-  const list = useArchiveList(view, filter);
-  const [selecting, setSelecting] = useState(false);
+  const list = useArchiveList(view, filter, browse);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [editingShop, setEditingShop] = useState(false);
+  const [shopName, setShopName] = useState(filter ?? '');
+  const [shopError, setShopError] = useState<string | null>(null);
+  const [savingShop, setSavingShop] = useState(false);
+
+  async function saveShop(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (view !== 'shops' || !filter) return;
+    const to = shopName.trim();
+    if (to === filter) {
+      setEditingShop(false);
+      return;
+    }
+    setSavingShop(true);
+    setShopError(null);
+    try {
+      await renameShop(filter, to);
+      archiveChanged();
+      navigate({ name: 'archive', view: 'shops', filter: to }, { replace: true });
+    } catch (error) {
+      setShopError(describeError(error));
+    } finally {
+      setSavingShop(false);
+    }
+  }
 
   function toggleSelected(id: string) {
     setSelected(function toggle(previous) {
@@ -50,7 +83,6 @@ export function ArchiveScreen({
         deleted.push(id);
       }
       setSelected(new Set());
-      setSelecting(false);
     } catch (error) {
       setDeleteError(describeError(error));
       setSelected(
@@ -87,7 +119,7 @@ export function ArchiveScreen({
 
   useEffect(
     function loadFacets() {
-      if ((view !== 'shops' && view !== 'tags') || filter) return;
+      if (view !== 'shops' && (view !== 'tags' || filter)) return;
       let cancelled = false;
       fetchArchiveFacets()
         .then(function loaded(result) {
@@ -161,7 +193,6 @@ export function ArchiveScreen({
         loadingMore={list.loadingMore}
         moreError={list.moreError}
         onLoadMore={list.loadMore}
-        selecting={selecting}
         selected={selected}
         onSelect={toggleSelected}
       />
@@ -169,7 +200,7 @@ export function ArchiveScreen({
   }
 
   return (
-    <div className="screen">
+    <div className={view === 'recent' ? 'screen screen--recent' : 'screen'}>
       <header className="screen-header screen-header--archive">
         <h1 className="screen-title">Archive</h1>
         <Link to={{ name: 'search', query: '' }} className="search-dock search-dock--link">
@@ -178,52 +209,68 @@ export function ArchiveScreen({
         </Link>
       </header>
       <ViewTabs view={view} />
-      {list.status === 'ready' &&
-        list.items.length > 0 &&
-        ((view !== 'shops' && view !== 'tags') || filter) && (
-          <div className="archive-selection">
-            {selecting ? (
-              <>
-                <span>{selected.size} selected</span>
-                <button
-                  type="button"
-                  className="button"
-                  disabled={selected.size === 0 || deleting}
-                  onClick={deleteSelected}
-                >
-                  Delete selected
-                </button>
-                <button
-                  type="button"
-                  className="text-button"
-                  onClick={function cancel() {
-                    setSelecting(false);
-                    setSelected(new Set());
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                className="text-button"
-                onClick={function start() {
-                  setSelecting(true);
-                }}
-              >
-                Select documents
-              </button>
-            )}
-          </div>
-        )}
+      {view === 'recent' && <RecentBrowseControls browse={browse} />}
+      {selected.size > 0 && (
+        <div className="archive-selection">
+          <>
+            <span>{selected.size} selected</span>
+            <button type="button" className="button" disabled={deleting} onClick={deleteSelected}>
+              Delete selected
+            </button>
+            <button
+              type="button"
+              className="text-button"
+              onClick={function cancel() {
+                setSelected(new Set());
+              }}
+            >
+              Cancel
+            </button>
+          </>
+        </div>
+      )}
       {deleteError !== null && (
         <p role="alert" className="document-edit__error">
           {deleteError}
         </p>
       )}
-      {filter && (view === 'shops' || view === 'tags') && (
-        <h2 className="archive-filter-title">{filter}</h2>
+      {filter && view === 'shops' && (
+        <div className="archive-shop-heading">
+          <h2 className="archive-filter-title">{filter}</h2>
+          <button type="button" className="text-button" onClick={() => setEditingShop(true)}>
+            Rename shop
+          </button>
+        </div>
+      )}
+      {filter && view === 'tags' && <h2 className="archive-filter-title">{filter}</h2>}
+      {editingShop && (
+        <form className="archive-shop-rename" onSubmit={saveShop}>
+          <label htmlFor="shop-rename">Name for all documents from this shop</label>
+          <input
+            id="shop-rename"
+            list="existing-shops"
+            autoFocus
+            maxLength={500}
+            required
+            value={shopName}
+            onChange={(event) => setShopName(event.target.value)}
+          />
+          <datalist id="existing-shops">
+            {facets?.shops.map(function option(shop) {
+              return <option key={shop.name} value={shop.name} />;
+            })}
+          </datalist>
+          <p className="note">Choose an existing name to merge the shops.</p>
+          <div className="archive-shop-rename__actions">
+            <button type="submit" className="button button--primary" disabled={savingShop}>
+              Save name
+            </button>
+            <button type="button" className="text-button" onClick={() => setEditingShop(false)}>
+              Cancel
+            </button>
+          </div>
+          {shopError && <p role="alert">{shopError}</p>}
+        </form>
       )}
       {content}
     </div>

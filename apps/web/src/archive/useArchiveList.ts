@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ArchiveDocument } from '@moneta/core/document';
-import type { ArchiveView } from '@moneta/core/routes';
+import type { ArchiveView, RecentBrowse } from '@moneta/core/routes';
 import type { DocumentPage } from '@moneta/core/document-list';
 import { describeError, fetchDocumentPage } from '../api';
 
@@ -25,8 +25,8 @@ export function archiveChanged(): void {
   window.dispatchEvent(new Event('moneta:documents-changed'));
 }
 
-function initialState(view: ArchiveView): ArchiveListState {
-  if (view === 'recent' && remembered !== null) {
+function initialState(view: ArchiveView, browse?: RecentBrowse): ArchiveListState {
+  if (view === 'recent' && browse === undefined && remembered !== null) {
     return { ...remembered, status: 'ready', error: null, loadingMore: false, moreError: null };
   }
   return {
@@ -54,12 +54,13 @@ function startsWith(items: ArchiveDocument[], page: DocumentPage): boolean {
 export function useArchiveList(
   view: ArchiveView,
   filter?: string,
+  browse?: RecentBrowse,
 ): ArchiveListState & {
   loadMore: () => void;
   retry: () => void;
 } {
   const [state, setState] = useState(function initial() {
-    return initialState(view);
+    return initialState(view, browse);
   });
   const [attempt, setAttempt] = useState(0);
   // Bumped whenever the list is replaced, so a later page that was requested
@@ -69,7 +70,7 @@ export function useArchiveList(
   useEffect(
     function loadFirstPage() {
       let cancelled = false;
-      fetchDocumentPage(null, null, listFilters(view, filter))
+      fetchDocumentPage(null, null, listFilters(view, filter, browse))
         .then(function show(page) {
           if (cancelled) {
             return;
@@ -104,14 +105,14 @@ export function useArchiveList(
         cancelled = true;
       };
     },
-    [attempt, view, filter],
+    [attempt, view, filter, browse],
   );
 
   useEffect(
     function refreshAfterChange() {
       function refresh() {
         generation.current += 1;
-        setState(initialState(view));
+        setState(initialState(view, browse));
         setAttempt(function next(n) {
           return n + 1;
         });
@@ -121,16 +122,16 @@ export function useArchiveList(
         window.removeEventListener('moneta:documents-changed', refresh);
       };
     },
-    [view],
+    [view, browse],
   );
 
   useEffect(
     function remember() {
-      if (view === 'recent' && state.status === 'ready') {
+      if (view === 'recent' && browse === undefined && state.status === 'ready') {
         remembered = { items: state.items, nextCursor: state.nextCursor };
       }
     },
-    [state, view],
+    [state, view, browse],
   );
 
   const { nextCursor, loadingMore } = state;
@@ -143,7 +144,7 @@ export function useArchiveList(
       setState(function markLoading(previous) {
         return { ...previous, loadingMore: true, moreError: null };
       });
-      fetchDocumentPage(nextCursor, null, listFilters(view, filter))
+      fetchDocumentPage(nextCursor, null, listFilters(view, filter, browse))
         .then(function append(page) {
           if (generation.current !== requestedFor) {
             return;
@@ -163,7 +164,7 @@ export function useArchiveList(
           });
         });
     },
-    [nextCursor, loadingMore, view, filter],
+    [nextCursor, loadingMore, view, filter, browse],
   );
 
   const retry = useCallback(function retry() {
@@ -181,7 +182,8 @@ export function useArchiveList(
   return { ...state, loadMore, retry };
 }
 
-function listFilters(view: ArchiveView, filter?: string) {
+function listFilters(view: ArchiveView, filter?: string, browse?: RecentBrowse) {
+  if (view === 'recent') return browse ?? {};
   if (view === 'shops' && filter) return { shop: filter };
   if (view === 'tags' && filter) return { tag: filter };
   if (view === 'starred') return { starred: true };

@@ -96,9 +96,10 @@ function renderScreen(
     case 'archive':
       return (
         <ArchiveScreen
-          key={`${route.view}:${route.filter ?? ''}`}
+          key={`${route.view}:${route.filter ?? ''}:${JSON.stringify(route.browse ?? {})}`}
           view={route.view}
           filter={route.filter}
+          browse={route.browse}
           onDeleted={onDeleted}
         />
       );

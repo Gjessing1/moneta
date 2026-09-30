@@ -44,9 +44,8 @@ try {
   await page.getByRole('button', { name: 'Undo' }).click();
   await page.locator('.doc-row').filter({ hasText: 'Test Alpha' }).waitFor();
 
-  await page.getByRole('button', { name: 'Select documents' }).click();
-  await page.getByRole('checkbox', { name: 'Select Test Beta' }).check();
-  await page.getByRole('checkbox', { name: 'Select Test Gamma' }).check();
+  await page.getByRole('button', { name: 'Select Test Beta' }).click();
+  await page.getByRole('button', { name: 'Select Test Gamma' }).click();
   await page.getByRole('button', { name: 'Delete selected' }).click();
   await page.getByText('2 documents deleted').waitFor();
   await page.goto(`${base}/settings/deleted`);

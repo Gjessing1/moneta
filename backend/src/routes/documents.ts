@@ -5,13 +5,16 @@ import type { DocumentDetail } from '@moneta/core/document';
 import type { DocumentPage } from '@moneta/core/document-list';
 import { parseDocumentListQuery } from '@moneta/core/document-list';
 import { applyDocumentPatch, parseDocumentPatch } from '@moneta/core/document-patch';
+import { parseShopRename } from '@moneta/core/shop-name';
 import type { Db } from '../db/database.js';
 import {
   getDocument,
   getDocumentDetail,
   listArchiveFacets,
+  listArchiveMonths,
   listDocuments,
   purgeDocument,
+  renameShop,
   updateDocument,
 } from '../db/documents.js';
 
@@ -28,6 +31,18 @@ const NOT_FOUND: ErrorBody = { error: 'no document with that id' };
 export function registerDocumentRoutes(app: FastifyInstance, db: Db, mailyPublicUrl: string): void {
   app.get('/api/archive/facets', async function facets() {
     return listArchiveFacets(db);
+  });
+  app.get('/api/archive/months', async function months(request, reply) {
+    const parsed = parseDocumentListQuery(request.query as Record<string, unknown>);
+    if (!parsed.ok) return reply.code(400).send({ error: parsed.error });
+    return listArchiveMonths(db, parsed.value);
+  });
+  app.post('/api/shops/rename', async function rename(request, reply) {
+    const parsed = parseShopRename(request.body);
+    if (!parsed.ok) return reply.code(400).send({ error: parsed.error });
+    const count = renameShop(db, parsed.value.from, parsed.value.to, new Date().toISOString());
+    if (count === 0) return reply.code(404).send({ error: 'no documents from that shop' });
+    return { count };
   });
   app.get('/api/documents', async function list(request, reply): Promise<DocumentPage | ErrorBody> {
     const parsed = parseDocumentListQuery(request.query as Record<string, unknown>);

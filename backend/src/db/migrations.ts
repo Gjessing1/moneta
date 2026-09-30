@@ -87,4 +87,8 @@ export const MIGRATIONS: readonly string[] = [
     last_success_at TEXT,
     last_error TEXT
   ) STRICT;`,
+  `CREATE TABLE shop_names (
+    original TEXT PRIMARY KEY COLLATE NOCASE,
+    display_name TEXT NOT NULL
+  ) STRICT;`,
 ];

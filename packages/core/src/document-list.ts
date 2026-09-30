@@ -8,6 +8,7 @@ import {
   type DocumentKind,
   type DocumentSource,
   type ParseResult,
+  isCalendarDate,
 } from './document.js';
 
 export interface DocumentListCursor {
@@ -26,6 +27,9 @@ export interface DocumentListQuery {
   bills: boolean;
   // true lists only soft-deleted documents (Recently deleted); false hides them.
   deleted: boolean;
+  from: string | null;
+  to: string | null;
+  sort: 'newest' | 'oldest';
   limit: number;
   after: DocumentListCursor | null;
 }
@@ -79,6 +83,9 @@ export function parseDocumentListQuery(
     starred: false,
     bills: false,
     deleted: false,
+    from: null,
+    to: null,
+    sort: 'newest',
     limit: DEFAULT_PAGE_SIZE,
     after: null,
   };
@@ -118,6 +125,16 @@ export function parseDocumentListQuery(
         return { ok: false, error: 'deleted must be true or false' };
       }
       query.deleted = value === 'true';
+    } else if (key === 'from' || key === 'to') {
+      if (!isCalendarDate(value)) {
+        return { ok: false, error: `${key} must be a calendar date as YYYY-MM-DD` };
+      }
+      query[key] = value;
+    } else if (key === 'sort') {
+      if (value !== 'newest' && value !== 'oldest') {
+        return { ok: false, error: 'sort must be newest or oldest' };
+      }
+      query.sort = value;
     } else if (key === 'limit') {
       const limit = Number(value);
       if (!Number.isInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE) {
@@ -133,6 +150,9 @@ export function parseDocumentListQuery(
     } else {
       return { ok: false, error: `unknown parameter ${key}` };
     }
+  }
+  if (query.from !== null && query.to !== null && query.from > query.to) {
+    return { ok: false, error: 'from must be on or before to' };
   }
   return { ok: true, value: query };
 }

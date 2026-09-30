@@ -25,3 +25,9 @@ The test expects an empty database and uses filenames and document facts prefixe
 `apps/web/e2e/delete.mjs` uses the same temporary backend and Playwright command, replacing
 `capture.mjs` with `delete.mjs`. It checks delete confirmation, undo, deleting a selection, Restore
 and Delete now through Settings › Recently deleted.
+
+`browse.mjs` checks Recent source, date, order and month controls, then merges two shops. After
+`npm run build`, set `moneta_verify_dir=$(mktemp -d)`, run
+`MONETA_DATA_DIR="$moneta_verify_dir" node apps/web/e2e/browse-seed.mjs`, and start the backend with
+that same directory and `PORT=3051`. Then use the Playwright command above with
+`browse.mjs`. The seeded database is temporary and must not be a live archive.

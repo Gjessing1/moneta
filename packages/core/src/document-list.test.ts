@@ -74,6 +74,9 @@ describe('parseDocumentListQuery', () => {
         starred: false,
         bills: false,
         deleted: false,
+        from: null,
+        to: null,
+        sort: 'newest',
         limit: DEFAULT_PAGE_SIZE,
         after: null,
       },
@@ -100,6 +103,9 @@ describe('parseDocumentListQuery', () => {
         starred: false,
         bills: false,
         deleted: true,
+        from: null,
+        to: null,
+        sort: 'newest',
         limit: 20,
         after: { sortKey: '2026-09-01', id: ID },
       },
@@ -115,5 +121,10 @@ describe('parseDocumentListQuery', () => {
     expect(parseDocumentListQuery({ q: 'x'.repeat(201) })).toMatchObject({ ok: false });
     expect(parseDocumentListQuery({ starred: 'yes' })).toMatchObject({ ok: false });
     expect(parseDocumentListQuery({ tag: '' })).toMatchObject({ ok: false });
+    expect(parseDocumentListQuery({ from: '2026-02-30' })).toMatchObject({ ok: false });
+    expect(parseDocumentListQuery({ from: '2026-09-20', to: '2026-09-01' })).toMatchObject({
+      ok: false,
+    });
+    expect(parseDocumentListQuery({ sort: 'amount' })).toMatchObject({ ok: false });
   });
 });

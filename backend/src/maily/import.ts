@@ -12,6 +12,7 @@ import { mailyDedupKey, MAX_ORIGINAL_BYTES, type DocumentFile } from '@moneta/co
 import type { Config } from '../config.js';
 import type { Db } from '../db/database.js';
 import {
+  displayShopName,
   getDocument,
   insertDocument,
   insertFile,
@@ -174,6 +175,7 @@ export async function runMailyImport(
           continue;
         }
         const incoming = importedDocument(entry.id, entry.item, now);
+        incoming.merchant = displayShopName(db, incoming.merchant);
         const existing = getDocument(db, entry.id);
         if (existing === undefined) insertDocument(db, incoming);
         else updateDocument(db, refreshImportedDocument(existing, incoming));

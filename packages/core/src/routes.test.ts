@@ -4,6 +4,11 @@ import { parseRoute, routePath, sectionOf, type Route } from './routes.js';
 describe('parseRoute', () => {
   it('maps each archive view to its path', () => {
     expect(parseRoute('/', '')).toEqual({ name: 'archive', view: 'recent' });
+    expect(parseRoute('/', '?sort=oldest&source=upload&to=2026-09-30')).toEqual({
+      name: 'archive',
+      view: 'recent',
+      browse: { sort: 'oldest', source: 'upload', to: '2026-09-30' },
+    });
     expect(parseRoute('/shops', '')).toEqual({ name: 'archive', view: 'shops' });
     expect(parseRoute('/tags', '')).toEqual({ name: 'archive', view: 'tags' });
     expect(parseRoute('/starred', '')).toEqual({ name: 'archive', view: 'starred' });
@@ -53,6 +58,11 @@ describe('routePath', () => {
   it('round-trips through parseRoute', () => {
     const routes: Route[] = [
       { name: 'archive', view: 'recent' },
+      {
+        name: 'archive',
+        view: 'recent',
+        browse: { source: 'maily', kind: 'invoice', from: '2026-01-01' },
+      },
       { name: 'archive', view: 'starred' },
       { name: 'archive', view: 'tags', filter: 'jobb' },
       { name: 'search', query: '' },

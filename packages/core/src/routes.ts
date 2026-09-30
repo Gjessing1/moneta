@@ -4,11 +4,28 @@
 
 // The archive's ways of arranging documents. Recent is the timeline; the others
 // exist because a timeline can't find a purchase from two years ago.
+import {
+  isCalendarDate,
+  isDocumentKind,
+  isDocumentSource,
+  type DocumentKind,
+  type DocumentSource,
+} from './document.js';
+
 export const ARCHIVE_VIEWS = ['recent', 'shops', 'tags', 'starred', 'bills'] as const;
 export type ArchiveView = (typeof ARCHIVE_VIEWS)[number];
 
+export interface RecentBrowse {
+  sort?: 'oldest';
+  kind?: DocumentKind;
+  source?: DocumentSource;
+  shop?: string;
+  from?: string;
+  to?: string;
+}
+
 export type Route =
-  | { name: 'archive'; view: ArchiveView; filter?: string }
+  | { name: 'archive'; view: ArchiveView; filter?: string; browse?: RecentBrowse }
   | { name: 'search'; query: string }
   | { name: 'capture' }
   | { name: 'settings' }
@@ -37,6 +54,22 @@ export function parseRoute(pathname: string, search: string): Route {
 
   for (const view of ARCHIVE_VIEWS) {
     if (ARCHIVE_VIEW_PATHS[view] === path) {
+      if (view === 'recent') {
+        const browse: RecentBrowse = {};
+        if (readQueryParam(search, 'sort') === 'oldest') browse.sort = 'oldest';
+        const kind = readQueryParam(search, 'kind');
+        if (isDocumentKind(kind)) browse.kind = kind;
+        const source = readQueryParam(search, 'source');
+        if (isDocumentSource(source)) browse.source = source;
+        const shop = readQueryParam(search, 'shop').trim();
+        if (shop.length > 0 && shop.length <= 500) browse.shop = shop;
+        const from = readQueryParam(search, 'from');
+        if (isCalendarDate(from)) browse.from = from;
+        const to = readQueryParam(search, 'to');
+        if (isCalendarDate(to)) browse.to = to;
+        if (browse.from && browse.to && browse.from > browse.to) delete browse.from;
+        if (Object.keys(browse).length > 0) return { name: 'archive', view, browse };
+      }
       if (view === 'shops' || view === 'tags') {
         const filter = readQueryParam(search, view === 'shops' ? 'shop' : 'tag');
         if (filter !== '') return { name: 'archive', view, filter };
@@ -71,6 +104,14 @@ export function parseRoute(pathname: string, search: string): Route {
 export function routePath(route: Route): string {
   switch (route.name) {
     case 'archive':
+      if (route.view === 'recent' && route.browse) {
+        const params: string[] = [];
+        for (const key of ['sort', 'kind', 'source', 'shop', 'from', 'to'] as const) {
+          const value = route.browse[key];
+          if (value) params.push(`${key}=${encodeURIComponent(value)}`);
+        }
+        return params.length > 0 ? `/?${params.join('&')}` : '/';
+      }
       if (route.filter && (route.view === 'shops' || route.view === 'tags')) {
         return `${ARCHIVE_VIEW_PATHS[route.view]}?${route.view === 'shops' ? 'shop' : 'tag'}=${encodeURIComponent(route.filter)}`;
       }

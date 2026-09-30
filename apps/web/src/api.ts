@@ -1,6 +1,7 @@
 import type { DocumentDetail } from '@moneta/core/document';
 import type { DocumentPatch } from '@moneta/core/document-patch';
 import type { DocumentPage } from '@moneta/core/document-list';
+import type { DocumentKind, DocumentSource } from '@moneta/core/document';
 import type { UploadSource } from '@moneta/core/document-upload';
 
 // A failed API call, carrying the server's own explanation when it sent one.
@@ -39,6 +40,11 @@ export function fetchDocumentPage(
     starred?: boolean;
     bills?: boolean;
     deleted?: boolean;
+    kind?: DocumentKind;
+    source?: DocumentSource;
+    from?: string;
+    to?: string;
+    sort?: 'oldest';
   } = {},
 ): Promise<DocumentPage> {
   const params = new URLSearchParams();
@@ -53,8 +59,30 @@ export function fetchDocumentPage(
   if (filters.starred) params.set('starred', 'true');
   if (filters.bills) params.set('bills', 'true');
   if (filters.deleted) params.set('deleted', 'true');
+  if (filters.kind) params.set('kind', filters.kind);
+  if (filters.source) params.set('source', filters.source);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  if (filters.sort) params.set('sort', filters.sort);
   const suffix = params.size > 0 ? `?${params}` : '';
   return request<DocumentPage>(`/api/documents${suffix}`);
+}
+
+export interface ArchiveMonth {
+  month: string;
+  count: number;
+}
+
+export function fetchArchiveMonths(filters: {
+  kind?: DocumentKind;
+  source?: DocumentSource;
+  shop?: string;
+}): Promise<ArchiveMonth[]> {
+  const params = new URLSearchParams();
+  if (filters.kind) params.set('kind', filters.kind);
+  if (filters.source) params.set('source', filters.source);
+  if (filters.shop) params.set('shop', filters.shop);
+  return request(`/api/archive/months?${params}`);
 }
 
 export interface ArchiveFacet {
@@ -63,6 +91,14 @@ export interface ArchiveFacet {
 }
 export function fetchArchiveFacets(): Promise<{ shops: ArchiveFacet[]; tags: ArchiveFacet[] }> {
   return request('/api/archive/facets');
+}
+
+export function renameShop(from: string, to: string): Promise<{ count: number }> {
+  return request('/api/shops/rename', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ from, to }),
+  });
 }
 
 export function fetchDocument(id: string): Promise<DocumentDetail> {

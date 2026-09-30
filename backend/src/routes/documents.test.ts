@@ -8,7 +8,7 @@ import type { DocumentPage } from '@moneta/core/document-list';
 import { buildApp } from '../app.js';
 import { loadConfig } from '../config.js';
 import { migrate, openDatabase, type Db } from '../db/database.js';
-import { insertDocument, insertFile, isDeletedImport } from '../db/documents.js';
+import { displayShopName, insertDocument, insertFile, isDeletedImport } from '../db/documents.js';
 import { originalPath } from '../storage/originals.js';
 
 const ID = '0d6f1c1e-6a3b-4c8e-9a52-2f0c4b1e7a10';
@@ -79,6 +79,37 @@ function seed(db: Db, count: number): string[] {
   }
   return ids;
 }
+
+describe('POST /api/shops/rename', () => {
+  it('merges existing shops and remembers sender names for future imports', async () => {
+    const { app, db } = await setup();
+    const otherId = `${ID.slice(0, -1)}2`;
+    insertDocument(db, stored({ merchant: 'shop@example.com' }));
+    insertDocument(db, stored({ id: otherId, merchant: 'Kiwi', source: 'camera' }));
+
+    const rename = await app.inject({
+      method: 'POST',
+      url: '/api/shops/rename',
+      payload: { from: 'shop@example.com', to: 'Kiwi' },
+    });
+    expect(rename.statusCode).toBe(200);
+    expect(rename.json()).toEqual({ count: 1 });
+    expect(displayShopName(db, 'shop@example.com')).toBe('Kiwi');
+    const facets = await app.inject({ method: 'GET', url: '/api/archive/facets' });
+    expect(facets.json().shops).toEqual([{ name: 'Kiwi', count: 2 }]);
+    const document = await app.inject({ method: 'GET', url: `/api/documents/${ID}` });
+    expect(document.json().document.merchant).toBe('Kiwi');
+
+    const again = await app.inject({
+      method: 'POST',
+      url: '/api/shops/rename',
+      payload: { from: 'Kiwi', to: 'Groceries' },
+    });
+    expect(again.statusCode).toBe(200);
+    expect(displayShopName(db, 'shop@example.com')).toBe('Groceries');
+    expect(displayShopName(db, 'Kiwi')).toBe('Groceries');
+  });
+});
 
 describe('PUT /api/documents/:id/file', () => {
   it('files a capture, and a retry of the same bytes is a no-op (A12)', async () => {
@@ -317,6 +348,63 @@ describe('GET /api/documents', () => {
     expect(seen.length).toBe(45);
     expect(new Set(seen)).toEqual(new Set(ids));
     expect(dates).toEqual([...dates].sort().reverse());
+  });
+
+  it('browses oldest first with a source, date range and month index', async () => {
+    const { app, db } = await setup();
+    insertDocument(
+      db,
+      stored({
+        id: `${ID.slice(0, -1)}1`,
+        merchant: 'Kiwi',
+        issuedOn: '2026-07-01',
+        source: 'maily',
+      }),
+    );
+    insertDocument(
+      db,
+      stored({
+        id: `${ID.slice(0, -1)}2`,
+        merchant: 'Kiwi',
+        issuedOn: '2026-08-02',
+        source: 'upload',
+      }),
+    );
+    insertDocument(
+      db,
+      stored({
+        id: `${ID.slice(0, -1)}3`,
+        merchant: 'Kiwi',
+        issuedOn: '2026-08-03',
+        source: 'upload',
+      }),
+    );
+    insertDocument(
+      db,
+      stored({
+        id: `${ID.slice(0, -1)}4`,
+        merchant: 'Other',
+        issuedOn: '2026-08-04',
+        source: 'upload',
+      }),
+    );
+    const query = 'sort=oldest&source=upload&shop=Kiwi&from=2026-08-01&to=2026-08-31&limit=1';
+    const first = (
+      await app.inject({ method: 'GET', url: `/api/documents?${query}` })
+    ).json<DocumentPage>();
+    expect(first.items.map((item) => item.issuedOn)).toEqual(['2026-08-02']);
+    const second = (
+      await app.inject({
+        method: 'GET',
+        url: `/api/documents?${query}&after=${encodeURIComponent(first.nextCursor!)}`,
+      })
+    ).json<DocumentPage>();
+    expect(second.items.map((item) => item.issuedOn)).toEqual(['2026-08-03']);
+    expect(second.nextCursor).toBeNull();
+    const months = (
+      await app.inject({ method: 'GET', url: '/api/archive/months?source=upload&shop=Kiwi' })
+    ).json();
+    expect(months).toEqual([{ month: '2026-08', count: 2 }]);
   });
 
   it('orders by the document date, or the capture moment when there is none', async () => {

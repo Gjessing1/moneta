@@ -10,7 +10,6 @@ interface RecentListProps {
   loadingMore: boolean;
   moreError: string | null;
   onLoadMore: () => void;
-  selecting?: boolean;
   selected?: ReadonlySet<string>;
   onSelect?: (id: string) => void;
 }
@@ -28,7 +27,6 @@ export function RecentList({
   loadingMore,
   moreError,
   onLoadMore,
-  selecting = false,
   selected,
   onSelect,
 }: RecentListProps) {
@@ -54,7 +52,6 @@ export function RecentList({
                   <DocumentRow
                     key={row.id}
                     row={row}
-                    selecting={selecting}
                     selected={selected?.has(row.id) ?? false}
                     onSelect={onSelect}
                   />
@@ -71,31 +68,37 @@ export function RecentList({
 
 function DocumentRow({
   row,
-  selecting,
   selected,
   onSelect,
 }: {
   row: ArchiveRow;
-  selecting: boolean;
   selected: boolean;
   onSelect?: (id: string) => void;
 }) {
   return (
     <li>
-      {selecting && (
-        <label className="doc-row__select">
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={function toggle() {
-              onSelect?.(row.id);
-            }}
-            aria-label={`Select ${row.title}`}
-          />
-        </label>
+      {onSelect && (
+        <button
+          type="button"
+          className="doc-row__select"
+          aria-label={`${selected ? 'Deselect' : 'Select'} ${row.title}`}
+          aria-pressed={selected}
+          onClick={() => onSelect(row.id)}
+        >
+          {selected ? (
+            <span className="doc-row__badge doc-row__badge--selected" aria-hidden="true">
+              ✓
+            </span>
+          ) : (
+            <SourceBadge source={row.source} />
+          )}
+        </button>
       )}
-      <Link to={{ name: 'document', id: row.id }} className="doc-row">
-        <SourceBadge source={row.source} />
+      <Link
+        to={{ name: 'document', id: row.id }}
+        className={onSelect ? 'doc-row' : 'doc-row doc-row--with-badge'}
+      >
+        {!onSelect && <SourceBadge source={row.source} />}
         <span className="doc-row__text">
           {/* The amount shares the title's line, so the detail below gets the
               row's full width on a narrow phone. */}
