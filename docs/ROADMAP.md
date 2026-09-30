@@ -23,6 +23,10 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
+- [~] maily import (A13): after the next invoice-enricher version bump in maily, verify its idle
+      backfill re-emits previously unclassified old messages and Moneta's existing cursor imports
+      them.
+
 
 ## 3. Android app: same features, from here on
 
