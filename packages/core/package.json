@@ -41,6 +41,10 @@
       "types": "./dist/format.d.ts",
       "default": "./dist/format.js"
     },
+    "./maily-import": {
+      "types": "./dist/maily-import.d.ts",
+      "default": "./dist/maily-import.js"
+    },
     "./routes": {
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"

@@ -82,4 +82,9 @@ export const MIGRATIONS: readonly string[] = [
     deleted_at TEXT NOT NULL
   ) STRICT;
   CREATE INDEX documents_deleted_at ON documents (deleted_at) WHERE deleted_at IS NOT NULL;`,
+  `CREATE TABLE import_status (
+    source TEXT PRIMARY KEY CHECK (source IN ('maily')),
+    last_success_at TEXT,
+    last_error TEXT
+  ) STRICT;`,
 ];

@@ -1,6 +1,7 @@
 import { THEME_PREFERENCES, type ThemePreference } from '@moneta/core/theme';
 import { useHealth } from './useHealth';
 import { Link } from '../router';
+import { useMailyImport } from './useMailyImport';
 
 const THEME_LABELS: Record<ThemePreference, string> = {
   system: 'System',
@@ -16,6 +17,7 @@ export function SettingsScreen({
   onThemeChange: (preference: ThemePreference) => void;
 }) {
   const health = useHealth();
+  const mailImport = useMailyImport();
 
   return (
     <div className="screen">
@@ -59,6 +61,30 @@ export function SettingsScreen({
             Recently deleted
           </Link>
         </div>
+      </section>
+
+      <section className="settings-section" aria-labelledby="import-heading">
+        <h2 id="import-heading" className="section-title">
+          Mail import
+        </h2>
+        <dl className="list">
+          <div className="list__row">
+            <dt>Last import</dt>
+            <dd className="list__value">
+              {mailImport.loading
+                ? 'Checking…'
+                : mailImport.lastSuccessAt
+                  ? new Date(mailImport.lastSuccessAt).toLocaleString()
+                  : 'Never'}
+            </dd>
+          </div>
+          {mailImport.lastError && (
+            <div className="list__row">
+              <dt>Error</dt>
+              <dd className="list__value">{mailImport.lastError}</dd>
+            </div>
+          )}
+        </dl>
       </section>
 
       <section className="settings-section" aria-labelledby="about-heading">

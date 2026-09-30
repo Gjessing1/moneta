@@ -23,13 +23,6 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] maily import (A13, A14, A18): backfill every message
-      maily classifies as an invoice or receipt, then run incrementally. The document attachment is copied into the data dir (A8), the sender, subject and received time go into `document.mail`, and the job is
-      idempotent on the dedup key. Import messages without document attachments as facts-only
-      documents; attachment-free invoices appear under Bills. After an invoice-enricher version bump
-      in maily, verify its backfill re-emits previously missed old messages and the existing cursor
-      picks them up. When maily is down, the job logs it, retries later, and the archive keeps
-      serving. Settings shows the last import time and any error.
 
 ## 3. Android app: same features, from here on
 
