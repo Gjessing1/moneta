@@ -1,8 +1,9 @@
 # Capture browser check
 
-This check files synthetic images into a **temporary** backend. It verifies that the web upload
-picker files two separate documents and that the camera picker appends two pages to one receipt with
-its entered details. Do not point it at the deployed backend.
+This check files synthetic images into a **temporary** backend. It verifies that a batch upload
+creates separate documents, the camera picker appends two pages to one receipt, entered details
+appear on the document, editing saves invoice facts, and a single upload can be filled in before
+filing. It runs at phone width. Do not point it at the deployed backend.
 
 From the repo root, after `npm run build`, use a free local port (3048 in this example):
 

@@ -14,6 +14,19 @@ interface Draft {
   files: File[];
   source: UploadSource;
   capturedAt: string;
+  details: DraftDetails;
+}
+
+interface DraftDetails {
+  merchant: string;
+  purchasedItem: string;
+  amount: string;
+  issuedOn: string;
+  notes: string;
+}
+
+function emptyDetails(): DraftDetails {
+  return { merchant: '', purchasedItem: '', amount: '', issuedOn: '', notes: '' };
 }
 
 export function CaptureScreen() {
@@ -21,9 +34,6 @@ export function CaptureScreen() {
   const uploadInput = useRef<HTMLInputElement>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [kind, setKind] = useState<'receipt' | 'invoice' | 'other'>('receipt');
-  const [merchant, setMerchant] = useState('');
-  const [amount, setAmount] = useState('');
-  const [issuedOn, setIssuedOn] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedCount, setSavedCount] = useState(0);
@@ -32,6 +42,19 @@ export function CaptureScreen() {
   const cameraDraft = drafts.find(function isCamera(draft) {
     return draft.source === 'camera';
   });
+  const detailDraft = drafts.length === 1 ? drafts[0] : cameraDraft;
+
+  function updateDetail(field: keyof DraftDetails, value: string) {
+    setDrafts(function update(previous) {
+      return previous.map(function change(draft) {
+        if (draft.id === detailDraft?.id) {
+          return { ...draft, details: { ...draft.details, [field]: value } };
+        }
+        return draft;
+      });
+    });
+    setError(null);
+  }
 
   function addFiles(files: FileList | File[], source: UploadSource) {
     const selected = Array.from(files);
@@ -58,7 +81,16 @@ export function CaptureScreen() {
           return draft.source === 'camera';
         });
         if (existing === undefined) {
-          return [...previous, { id: crypto.randomUUID(), files: selected, source, capturedAt }];
+          return [
+            ...previous,
+            {
+              id: crypto.randomUUID(),
+              files: selected,
+              source,
+              capturedAt,
+              details: emptyDetails(),
+            },
+          ];
         }
         return previous.map(function append(draft) {
           if (draft.id === existing.id) {
@@ -72,7 +104,13 @@ export function CaptureScreen() {
         return [
           ...previous,
           ...selected.map(function makeDraft(file): Draft {
-            return { id: crypto.randomUUID(), files: [file], source, capturedAt };
+            return {
+              id: crypto.randomUUID(),
+              files: [file],
+              source,
+              capturedAt,
+              details: emptyDetails(),
+            };
           }),
         ];
       });
@@ -114,10 +152,14 @@ export function CaptureScreen() {
     if (saving || drafts.length === 0) {
       return;
     }
-    const parsedAmount = parseAmount(cameraDraft === undefined ? '' : amount);
-    if (!parsedAmount.ok) {
-      setError(parsedAmount.error);
-      return;
+    const amounts = new Map<string, number | null>();
+    for (const draft of drafts) {
+      const parsed = parseAmount(draft.details.amount);
+      if (!parsed.ok) {
+        setError(`${draft.files[0]?.name ?? 'Receipt'}: ${parsed.error}`);
+        return;
+      }
+      amounts.set(draft.id, parsed.value);
     }
     setSaving(true);
     setError(null);
@@ -141,16 +183,23 @@ export function CaptureScreen() {
             draft.source === 'camera' ? 'receipt' : kind,
           );
         }
-        if (draft.source === 'camera') {
+        const details = draft.details;
+        const hasDetails =
+          details.merchant.trim() !== '' ||
+          details.purchasedItem.trim() !== '' ||
+          details.amount.trim() !== '' ||
+          details.issuedOn !== '' ||
+          details.notes.trim() !== '';
+        if (draft.source === 'camera' || hasDetails) {
+          const amountMinor = amounts.get(draft.id) ?? null;
           await saveDocument(draft.id, {
-            merchant: merchant.trim() || null,
-            amountMinor: parsedAmount.value,
-            currency: parsedAmount.value === null ? null : 'NOK',
-            issuedOn: issuedOn || null,
+            merchant: details.merchant.trim() || null,
+            purchasedItem: details.purchasedItem.trim() || null,
+            amountMinor,
+            currency: amountMinor === null ? null : 'NOK',
+            issuedOn: details.issuedOn || null,
+            notes: details.notes,
           });
-          setMerchant('');
-          setAmount('');
-          setIssuedOn('');
         }
         lastId = draft.id;
         completed += 1;
@@ -263,20 +312,33 @@ export function CaptureScreen() {
                 );
               })}
             </ul>
-            {cameraDraft !== undefined && (
+            {detailDraft !== undefined && (
               <div className="capture__details">
                 <p className="note">
-                  Receipt details are optional. You can also edit them after filing.
+                  Details are optional. Add what you know now, or edit the document after filing.
                 </p>
                 <label>
-                  Shop{' '}
+                  Shop or sender{' '}
                   <input
                     name="merchant"
-                    value={merchant}
+                    value={detailDraft.details.merchant}
                     maxLength={500}
                     disabled={saving}
                     onChange={function change(event) {
-                      setMerchant(event.target.value);
+                      updateDetail('merchant', event.target.value);
+                    }}
+                  />
+                </label>
+                <label>
+                  What you bought{' '}
+                  <input
+                    name="purchasedItem"
+                    value={detailDraft.details.purchasedItem}
+                    maxLength={500}
+                    placeholder="e.g. headphones"
+                    disabled={saving}
+                    onChange={function change(event) {
+                      updateDetail('purchasedItem', event.target.value);
                     }}
                   />
                 </label>
@@ -286,10 +348,10 @@ export function CaptureScreen() {
                     name="amount"
                     inputMode="decimal"
                     placeholder="499,50"
-                    value={amount}
+                    value={detailDraft.details.amount}
                     disabled={saving}
                     onChange={function change(event) {
-                      setAmount(event.target.value);
+                      updateDetail('amount', event.target.value);
                     }}
                   />
                 </label>
@@ -298,10 +360,22 @@ export function CaptureScreen() {
                   <input
                     name="issuedOn"
                     type="date"
-                    value={issuedOn}
+                    value={detailDraft.details.issuedOn}
                     disabled={saving}
                     onChange={function change(event) {
-                      setIssuedOn(event.target.value);
+                      updateDetail('issuedOn', event.target.value);
+                    }}
+                  />
+                </label>
+                <label className="capture__notes">
+                  Notes{' '}
+                  <textarea
+                    name="notes"
+                    rows={3}
+                    value={detailDraft.details.notes}
+                    disabled={saving}
+                    onChange={function change(event) {
+                      updateDetail('notes', event.target.value);
                     }}
                   />
                 </label>

@@ -1,5 +1,5 @@
 /*
- * One document. Phone: the original, then facts and source, with download and
+ * One document. Phone: facts, then original and source, with download and
  * share in a bar at the thumb. Wide screens: the original on the left and
  * everything else in a column beside it.
  */
@@ -47,6 +47,12 @@
 }
 
 /* ---- The original's pages ---- */
+
+.document__original {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .pages {
   display: flex;
@@ -123,6 +129,28 @@
 
 /* ---- Facts ---- */
 
+.document__facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.document__section-title {
+  padding: 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.document__empty-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .facts__row {
   display: flex;
   align-items: center;
@@ -167,7 +195,7 @@
 .document-edit {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 18px;
   padding: 16px;
   overflow: visible;
 }
@@ -175,6 +203,25 @@
 .document-edit__intro {
   font-size: 13px;
   color: var(--muted);
+}
+
+.document-edit__group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.document-edit__group + .document-edit__group {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.document-edit__group legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .document-edit__field {
@@ -230,6 +277,12 @@
 
 .document-edit__actions {
   flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+  .document-edit__pair {
+    flex-wrap: wrap;
+  }
 }
 
 /* ---- Source (D5) ---- */
@@ -469,10 +522,6 @@
 
   .document__facts {
     grid-area: facts;
-  }
-
-  .document-edit__pair--dates {
-    flex-direction: column;
   }
 
   .document__source {

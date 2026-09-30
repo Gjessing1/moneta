@@ -90,44 +90,52 @@ export function DocumentEditForm({ document: doc, onSaved, onCancel }: Props) {
         Check the details against the original. An amber dot marks an unconfirmed value until you
         save.
       </p>
-      <EditField label="Type" guessed={doc.guessed.includes('kind')}>
-        <select
-          name="kind"
-          value={values.kind}
-          disabled={saving}
-          onChange={function change(event) {
-            update('kind', event.target.value);
-          }}
-        >
-          <option value="receipt">Receipt</option>
-          <option value="invoice">Invoice</option>
-          <option value="other">Other</option>
-        </select>
-      </EditField>
-      {field('merchant', 'Shop or sender')}
-      {field('purchasedItem', 'What you bought', { placeholder: 'Optional, e.g. headphones' })}
-      <div className="document-edit__pair">
-        {field('amount', 'Amount', { inputMode: 'decimal', placeholder: '499,50' })}
-        {field('currency', 'Currency', { placeholder: 'NOK' })}
-      </div>
-      <div className="document-edit__pair document-edit__pair--dates">
+      <fieldset className="document-edit__group">
+        <legend>Document</legend>
+        <EditField label="Type" guessed={doc.guessed.includes('kind')}>
+          <select
+            name="kind"
+            value={values.kind}
+            disabled={saving}
+            onChange={function change(event) {
+              update('kind', event.target.value);
+            }}
+          >
+            <option value="receipt">Receipt</option>
+            <option value="invoice">Invoice</option>
+            <option value="other">Other</option>
+          </select>
+        </EditField>
+        {field('merchant', 'Shop or sender')}
+        {field('purchasedItem', 'What you bought', { placeholder: 'e.g. headphones' })}
+        <div className="document-edit__pair">
+          {field('amount', 'Amount', { inputMode: 'decimal', placeholder: '499,50' })}
+          {field('currency', 'Currency', { placeholder: 'NOK' })}
+        </div>
         {field('issuedOn', 'Document date', { type: 'date' })}
+      </fieldset>
+      <fieldset className="document-edit__group">
+        <legend>Invoice details</legend>
         {field('dueOn', 'Due date', { type: 'date' })}
-      </div>
-      {field('kid', 'KID')}
-      {field('account', 'Account')}
-      {field('iban', 'IBAN')}
-      <EditField label="Notes" guessed={false}>
-        <textarea
-          name="notes"
-          rows={4}
-          value={values.notes}
-          disabled={saving}
-          onChange={function change(event) {
-            update('notes', event.target.value);
-          }}
-        />
-      </EditField>
+        {field('kid', 'KID')}
+        {field('account', 'Account')}
+        {field('iban', 'IBAN')}
+      </fieldset>
+      <fieldset className="document-edit__group">
+        <legend>Notes</legend>
+        <label className="document-edit__field">
+          <span className="visually-hidden">Notes</span>
+          <textarea
+            name="notes"
+            rows={4}
+            value={values.notes}
+            disabled={saving}
+            onChange={function change(event) {
+              update('notes', event.target.value);
+            }}
+          />
+        </label>
+      </fieldset>
       {error !== null && (
         <p className="document-edit__error" role="alert">
           {error}

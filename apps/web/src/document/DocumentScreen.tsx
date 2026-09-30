@@ -17,9 +17,9 @@ import { useDocument } from './useDocument';
 // The device's zone: dates are stored in UTC and converted only here.
 const TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-// One document: the original first, since that is what it is opened for, then
-// the facts, where it came from, and download/share. `viewer` is the
-// full-screen original (/d/:id/original), drawn over this screen.
+// One document: facts for quick lookup, then the original, provenance and
+// download/share. `viewer` is the full-screen original (/d/:id/original),
+// drawn over this screen.
 export function DocumentScreen({ id, viewer }: { id: string; viewer: boolean }) {
   const state = useDocument(id);
 
@@ -136,6 +136,7 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
       )}
       {editing && (
         <div className="document__facts">
+          <h2 className="document__section-title">Edit details</h2>
           <DocumentEditForm
             document={doc}
             onSaved={function saved(savedDetail) {
@@ -148,18 +149,39 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
           />
         </div>
       )}
+      {!editing && (
+        <section className="document__facts" aria-labelledby="document-details-title">
+          <h2 id="document-details-title" className="document__section-title">
+            Details
+          </h2>
+          {view.facts.length > 0 ? (
+            <DocumentFacts facts={view.facts} />
+          ) : (
+            <div className="document__empty-details list">
+              <p>No details have been added yet.</p>
+              {doc.deletedAt === null && (
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={function startEdit() {
+                    setEditing(true);
+                  }}
+                >
+                  Add details
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+      )}
       <section className="document__original" aria-label="Original">
+        <h2 className="document__section-title">Original</h2>
         {files.length > 0 ? (
           <OriginalPages documentId={doc.id} files={files} mode={inline} />
         ) : (
           <p className="note">No original is stored for this document, only its facts.</p>
         )}
       </section>
-      {!editing && view.facts.length > 0 && (
-        <div className="document__facts">
-          <DocumentFacts facts={view.facts} />
-        </div>
-      )}
       <div className="document__source">
         <SourceBlock
           source={doc.source}

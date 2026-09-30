@@ -346,7 +346,12 @@
   grid-column: 1 / -1;
 }
 
+.capture__details .capture__notes {
+  grid-column: 1 / -1;
+}
+
 .capture__details input,
+.capture__details textarea,
 .capture__kind select {
   width: 100%;
   min-height: 44px;
@@ -355,6 +360,11 @@
   border-radius: var(--radius-control);
   background: var(--surface);
   color: var(--ink);
+  font: inherit;
+}
+
+.capture__details textarea {
+  resize: vertical;
 }
 
 .capture__error {
@@ -371,6 +381,12 @@
 
 .capture__success a {
   text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .capture__details {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (min-width: 900px) {
