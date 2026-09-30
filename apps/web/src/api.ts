@@ -1,4 +1,5 @@
 import type { DocumentDetail } from '@moneta/core/document';
+import type { DocumentPatch } from '@moneta/core/document-patch';
 import type { DocumentPage } from '@moneta/core/document-list';
 
 // A failed API call, carrying the server's own explanation when it sent one.
@@ -28,16 +29,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-export function fetchDocumentPage(after: string | null): Promise<DocumentPage> {
-  let path = '/api/documents';
+export function fetchDocumentPage(
+  after: string | null,
+  q: string | null = null,
+): Promise<DocumentPage> {
+  const params = new URLSearchParams();
   if (after !== null) {
-    path = `${path}?after=${encodeURIComponent(after)}`;
+    params.set('after', after);
   }
-  return request<DocumentPage>(path);
+  if (q !== null) {
+    params.set('q', q);
+  }
+  const suffix = params.size > 0 ? `?${params}` : '';
+  return request<DocumentPage>(`/api/documents${suffix}`);
 }
 
 export function fetchDocument(id: string): Promise<DocumentDetail> {
   return request<DocumentDetail>(`/api/documents/${encodeURIComponent(id)}`);
+}
+
+export function saveDocument(id: string, patch: DocumentPatch): Promise<DocumentDetail> {
+  return request<DocumentDetail>(`/api/documents/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
 }
 
 // Where a stored original is served; the position is its page order.

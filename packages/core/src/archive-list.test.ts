@@ -10,6 +10,7 @@ function doc(overrides: Partial<ArchiveDocument>): ArchiveDocument {
     source: 'maily',
     kind: 'invoice',
     merchant: 'Fjordkraft',
+    purchasedItem: null,
     amountMinor: 118400,
     currency: 'NOK',
     issuedOn: '2026-09-25',
@@ -55,6 +56,12 @@ describe('describeDocument', () => {
       detail: 'Receipt photographed, 1 Oct',
       amount: null,
     });
+  });
+
+  it('shows what was bought beneath the shop', () => {
+    expect(describeDocument(doc({ purchasedItem: 'Headphones' }), OSLO).detail).toBe(
+      'Invoice from mail, 25 Sep · Headphones',
+    );
   });
 });
 

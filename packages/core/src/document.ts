@@ -29,6 +29,7 @@ export interface ArchiveDocument {
   source: DocumentSource;
   kind: DocumentKind;
   merchant: string | null;
+  purchasedItem: string | null;
   // Integer minor units (øre, cents), so sums never pick up float error.
   amountMinor: number | null;
   // ISO 4217 code. Required whenever there is an amount.

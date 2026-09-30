@@ -47,6 +47,7 @@ function stored(overrides: Partial<ArchiveDocument>): ArchiveDocument {
     source: 'maily',
     kind: 'invoice',
     merchant: 'Hafslund',
+    purchasedItem: null,
     amountMinor: 149950,
     currency: 'NOK',
     issuedOn: '2026-09-01',
@@ -318,18 +319,25 @@ describe('PATCH /api/documents/:id', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: `/api/documents/${ID}`,
-      payload: { merchant: 'Hafslund Strøm', notes: 'august' },
+      payload: { merchant: 'Hafslund Strøm', purchasedItem: 'Heater', notes: 'august' },
     });
     expect(res.statusCode).toBe(200);
     const doc = res.json<DocumentDetail>().document;
     expect(doc).toMatchObject({
       merchant: 'Hafslund Strøm',
+      purchasedItem: 'Heater',
       notes: 'august',
       guessed: ['amountMinor'],
     });
     expect(doc.updatedAt > stored({}).updatedAt).toBe(true);
     const reread = await app.inject({ method: 'GET', url: `/api/documents/${ID}` });
     expect(reread.json<DocumentDetail>().document).toEqual(doc);
+    const found = await app.inject({ method: 'GET', url: '/api/documents?q=heater' });
+    expect(
+      found.json<DocumentPage>().items.map(function id(item) {
+        return item.id;
+      }),
+    ).toEqual([ID]);
   });
 
   it('refuses invalid edits and leaves the document as it was', async () => {

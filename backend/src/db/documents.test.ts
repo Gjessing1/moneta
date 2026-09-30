@@ -11,6 +11,7 @@ function receipt(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     source: 'maily',
     kind: 'invoice',
     merchant: 'Hafslund',
+    purchasedItem: null,
     amountMinor: 149950,
     currency: 'NOK',
     issuedOn: '2026-09-01',

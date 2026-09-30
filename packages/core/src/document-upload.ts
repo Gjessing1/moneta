@@ -104,6 +104,7 @@ export function newUploadedDocument(
     source: upload.source,
     kind,
     merchant: null,
+    purchasedItem: null,
     amountMinor: null,
     currency: null,
     issuedOn: null,

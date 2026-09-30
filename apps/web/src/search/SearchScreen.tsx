@@ -1,12 +1,15 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { RecentList } from '../archive/RecentList';
 import { EmptyState } from '../frame/EmptyState';
 import { ClearIcon, SearchIcon } from '../icons';
 import { Link, navigate } from '../router';
+import { useSearchResults } from './useSearchResults';
 
 export function SearchScreen({ query }: { query: string }) {
   // Local state keeps typing smooth; the URL follows so a search can be
   // reloaded, shared and reached with the back button.
   const [text, setText] = useState(query);
+  const search = useSearchResults(text);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     setText(event.target.value);
@@ -31,14 +34,42 @@ export function SearchScreen({ query }: { query: string }) {
   if (trimmed === '') {
     results = (
       <EmptyState title="Find anything you have filed">
-        Search shop names, what you bought, notes, amounts, dates and the text inside every PDF and
-        photo.
+        Search shop names, what you bought, and notes.
       </EmptyState>
+    );
+  } else if (search.loading) {
+    results = (
+      <p className="note" role="status">
+        Searching…
+      </p>
+    );
+  } else if (search.error !== null && search.items.length === 0) {
+    results = (
+      <EmptyState
+        title="Search could not be loaded"
+        action={
+          <button type="button" className="button" onClick={search.retry}>
+            Try again
+          </button>
+        }
+      >
+        {search.error}
+      </EmptyState>
+    );
+  } else if (search.items.length > 0) {
+    results = (
+      <RecentList
+        docs={search.items}
+        hasMore={search.nextCursor !== null}
+        loadingMore={search.loadingMore}
+        moreError={search.error}
+        onLoadMore={search.loadMore}
+      />
     );
   } else {
     results = (
       <EmptyState title="No matches">
-        Nothing in the archive matches “{trimmed}”. Try a shop name, an amount like 499, or a month.
+        Nothing in the archive matches “{trimmed}”. Try a shop name, what you bought, or a note.
       </EmptyState>
     );
   }
@@ -57,6 +88,7 @@ export function SearchScreen({ query }: { query: string }) {
             className="search-field__input"
             aria-label="Search the archive"
             placeholder="Search"
+            maxLength={200}
             enterKeyHint="search"
             autoFocus
             value={text}

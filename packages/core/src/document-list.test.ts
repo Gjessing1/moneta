@@ -16,6 +16,7 @@ function doc(issuedOn: string | null, capturedAt: string): ArchiveDocument {
     source: 'camera',
     kind: 'receipt',
     merchant: null,
+    purchasedItem: null,
     amountMinor: null,
     currency: null,
     issuedOn,
@@ -62,7 +63,14 @@ describe('parseDocumentListQuery', () => {
   it('defaults to the first page of everything not deleted', () => {
     expect(parseDocumentListQuery({})).toEqual({
       ok: true,
-      value: { kind: null, source: null, deleted: false, limit: DEFAULT_PAGE_SIZE, after: null },
+      value: {
+        kind: null,
+        source: null,
+        q: null,
+        deleted: false,
+        limit: DEFAULT_PAGE_SIZE,
+        after: null,
+      },
     });
   });
 
@@ -70,6 +78,7 @@ describe('parseDocumentListQuery', () => {
     const result = parseDocumentListQuery({
       kind: 'receipt',
       source: 'camera',
+      q: 'headphones',
       deleted: 'true',
       limit: '20',
       after: `2026-09-01|${ID}`,
@@ -79,6 +88,7 @@ describe('parseDocumentListQuery', () => {
       value: {
         kind: 'receipt',
         source: 'camera',
+        q: 'headphones',
         deleted: true,
         limit: 20,
         after: { sortKey: '2026-09-01', id: ID },
@@ -92,6 +102,6 @@ describe('parseDocumentListQuery', () => {
     expect(parseDocumentListQuery({ limit: '1000' })).toMatchObject({ ok: false });
     expect(parseDocumentListQuery({ deleted: 'yes' })).toMatchObject({ ok: false });
     expect(parseDocumentListQuery({ kind: ['receipt', 'invoice'] })).toMatchObject({ ok: false });
-    expect(parseDocumentListQuery({ q: 'kiwi' })).toMatchObject({ ok: false });
+    expect(parseDocumentListQuery({ q: 'x'.repeat(201) })).toMatchObject({ ok: false });
   });
 });

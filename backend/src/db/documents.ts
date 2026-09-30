@@ -19,6 +19,7 @@ interface DocumentRow {
   source: DocumentSource;
   kind: DocumentKind;
   merchant: string | null;
+  purchased_item: string | null;
   amount_minor: number | null;
   currency: string | null;
   issued_on: string | null;
@@ -57,6 +58,7 @@ function toDocument(row: DocumentRow): ArchiveDocument {
     source: row.source,
     kind: row.kind,
     merchant: row.merchant,
+    purchasedItem: row.purchased_item,
     amountMinor: row.amount_minor,
     currency: row.currency,
     issuedOn: row.issued_on,
@@ -109,12 +111,12 @@ function toFile(row: FileRow): DocumentFile {
 export function insertDocument(db: Db, doc: ArchiveDocument): void {
   db.prepare(
     `INSERT INTO documents (
-       id, source, kind, merchant, amount_minor, currency, issued_on, due_on,
+       id, source, kind, merchant, purchased_item, amount_minor, currency, issued_on, due_on,
        kid, account, iban, notes, dedup_key, guessed,
        captured_at, created_at, updated_at, deleted_at,
        mail_from_name, mail_from_address, mail_subject, mail_received_at
      ) VALUES (
-       @id, @source, @kind, @merchant, @amountMinor, @currency, @issuedOn, @dueOn,
+       @id, @source, @kind, @merchant, @purchasedItem, @amountMinor, @currency, @issuedOn, @dueOn,
        @kid, @account, @iban, @notes, @dedupKey, @guessed,
        @capturedAt, @createdAt, @updatedAt, @deletedAt,
        @mailFromName, @mailFromAddress, @mailSubject, @mailReceivedAt
@@ -161,7 +163,8 @@ export function getDocumentDetail(
 export function updateDocument(db: Db, doc: ArchiveDocument): void {
   db.prepare(
     `UPDATE documents SET
-       kind = @kind, merchant = @merchant, amount_minor = @amountMinor,
+       kind = @kind, merchant = @merchant, purchased_item = @purchasedItem,
+       amount_minor = @amountMinor,
        currency = @currency, issued_on = @issuedOn, due_on = @dueOn, kid = @kid,
        account = @account, iban = @iban, notes = @notes, guessed = @guessed,
        updated_at = @updatedAt, deleted_at = @deletedAt
@@ -186,6 +189,14 @@ export function listDocuments(db: Db, query: DocumentListQuery): DocumentPage {
   if (query.source !== null) {
     conditions.push('source = @source');
     params.source = query.source;
+  }
+  if (query.q !== null) {
+    conditions.push(`(
+      instr(lower(COALESCE(merchant, '')), lower(@q)) > 0 OR
+      instr(lower(COALESCE(purchased_item, '')), lower(@q)) > 0 OR
+      instr(lower(notes), lower(@q)) > 0
+    )`);
+    params.q = query.q;
   }
   if (query.after !== null) {
     conditions.push('(COALESCE(issued_on, captured_at), id) < (@afterKey, @afterId)');

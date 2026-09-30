@@ -66,4 +66,7 @@ export const MIGRATIONS: readonly string[] = [
   ALTER TABLE documents ADD COLUMN mail_subject TEXT;
   ALTER TABLE documents ADD COLUMN mail_received_at TEXT;
   `,
+  // A plain description of the goods, kept separately from the shop and notes
+  // so warranty entries can be named by what was bought.
+  `ALTER TABLE documents ADD COLUMN purchased_item TEXT;`,
 ];

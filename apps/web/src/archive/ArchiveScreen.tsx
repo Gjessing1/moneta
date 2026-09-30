@@ -13,7 +13,7 @@ export function ArchiveScreen({ view }: { view: ArchiveView }) {
         <h1 className="screen-title">Archive</h1>
         <Link to={{ name: 'search', query: '' }} className="search-dock search-dock--link">
           <SearchIcon size={20} strokeWidth={1.9} />
-          <span className="search-dock__placeholder">Search shops, items, amounts, text</span>
+          <span className="search-dock__placeholder">Search shops, items, notes</span>
         </Link>
       </header>
       <ViewTabs view={view} />

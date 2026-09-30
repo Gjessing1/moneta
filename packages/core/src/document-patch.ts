@@ -11,6 +11,7 @@ import {
 export const EDITABLE_FIELDS = [
   'kind',
   'merchant',
+  'purchasedItem',
   'amountMinor',
   'currency',
   'issuedOn',
@@ -63,6 +64,7 @@ function setField(patch: DocumentPatch, field: EditableField, value: unknown): s
       patch.kind = value;
       return null;
     case 'merchant':
+    case 'purchasedItem':
     case 'kid':
     case 'account':
     case 'iban': {

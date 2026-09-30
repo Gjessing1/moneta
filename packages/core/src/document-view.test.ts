@@ -15,6 +15,7 @@ function doc(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     source: 'maily',
     kind: 'invoice',
     merchant: 'Fjordkraft',
+    purchasedItem: null,
     amountMinor: 118400,
     currency: 'NOK',
     issuedOn: '2026-09-25',
@@ -132,6 +133,15 @@ describe('documentFacts', () => {
       iban: null,
     });
     expect(documentFacts(bare)).toEqual([]);
+  });
+
+  it('shows what was bought as a separate fact', () => {
+    expect(documentFacts(doc({ purchasedItem: 'Headphones' }))).toContainEqual({
+      label: 'What you bought',
+      value: 'Headphones',
+      copy: null,
+      strong: false,
+    });
   });
 });
 

@@ -6,6 +6,7 @@ import { EmptyState } from '../frame/EmptyState';
 import { BackIcon } from '../icons';
 import { BackLink, Link, navigate } from '../router';
 import { DocumentActions } from './DocumentActions';
+import { DocumentEditForm } from './DocumentEditForm';
 import { DocumentFacts } from './DocumentFacts';
 import { OriginalPages, type PagesMode } from './OriginalPages';
 import { OriginalViewer } from './OriginalViewer';
@@ -76,7 +77,9 @@ export function DocumentScreen({ id, viewer }: { id: string; viewer: boolean }) 
 }
 
 function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: boolean }) {
-  const { document: doc, files, mailUrl } = detail;
+  const [current, setCurrent] = useState(detail);
+  const [editing, setEditing] = useState(false);
+  const { document: doc, files, mailUrl } = current;
   const view = useMemo(
     function describe() {
       return describeDocumentView(doc, files, TIME_ZONE);
@@ -114,11 +117,36 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
           <h1 className="screen-title screen-title--small">{view.title}</h1>
           <p className="document__subtitle">{view.subtitle}</p>
         </div>
+        {!viewer && doc.deletedAt === null && !editing && (
+          <button
+            type="button"
+            className="text-button document__edit-link"
+            onClick={function startEdit() {
+              setEditing(true);
+            }}
+          >
+            Edit
+          </button>
+        )}
       </header>
       {view.deleted !== null && (
         <p className="document__deleted" role="status">
           {view.deleted}. It stays out of the archive until it is restored.
         </p>
+      )}
+      {editing && (
+        <div className="document__facts">
+          <DocumentEditForm
+            document={doc}
+            onSaved={function saved(savedDetail) {
+              setCurrent(savedDetail);
+              setEditing(false);
+            }}
+            onCancel={function cancel() {
+              setEditing(false);
+            }}
+          />
+        </div>
       )}
       <section className="document__original" aria-label="Original">
         {files.length > 0 ? (
@@ -127,7 +155,7 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
           <p className="note">No original is stored for this document, only its facts.</p>
         )}
       </section>
-      {view.facts.length > 0 && (
+      {!editing && view.facts.length > 0 && (
         <div className="document__facts">
           <DocumentFacts facts={view.facts} />
         </div>
@@ -141,7 +169,7 @@ function DocumentBody({ detail, viewer }: { detail: DocumentDetail; viewer: bool
           downloadUrl={urlOf}
         />
       </div>
-      {files.length > 0 && (
+      {files.length > 0 && !editing && (
         <div className="document__actions">
           <DocumentActions title={view.title} files={view.files} fileUrl={urlOf} />
         </div>

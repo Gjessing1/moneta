@@ -80,6 +80,9 @@ export function documentFacts(doc: ArchiveDocument): DocumentFact[] {
   if (doc.amountMinor !== null && doc.currency !== null) {
     facts.push(fact('Amount', formatAmount(doc.amountMinor, doc.currency), null, true));
   }
+  if (doc.purchasedItem !== null) {
+    facts.push(fact('What you bought', doc.purchasedItem));
+  }
   if (doc.issuedOn !== null) {
     facts.push(fact('Issued', formatDayLong(doc.issuedOn)));
   }

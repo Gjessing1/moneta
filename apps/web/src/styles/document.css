@@ -32,6 +32,11 @@
   color: var(--muted);
 }
 
+.document__edit-link {
+  flex-shrink: 0;
+  margin-top: -8px;
+}
+
 .document__deleted {
   padding: 10px 14px;
   border-radius: var(--radius-control);
@@ -155,6 +160,76 @@
   width: 40px;
   height: 40px;
   border-radius: 10px;
+}
+
+/* ---- Editing the facts ---- */
+
+.document-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  overflow: visible;
+}
+
+.document-edit__intro {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.document-edit__field {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.document-edit__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.document-edit__guess {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--due);
+}
+
+.document-edit input,
+.document-edit select,
+.document-edit textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+
+.document-edit textarea {
+  resize: vertical;
+}
+
+.document-edit__pair,
+.document-edit__actions {
+  display: flex;
+  gap: 12px;
+}
+
+.document-edit__error {
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.document-edit__actions {
+  flex-wrap: wrap;
 }
 
 /* ---- Source (D5) ---- */
@@ -394,6 +469,10 @@
 
   .document__facts {
     grid-area: facts;
+  }
+
+  .document-edit__pair--dates {
+    flex-direction: column;
   }
 
   .document__source {

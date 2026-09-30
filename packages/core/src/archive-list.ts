@@ -57,11 +57,15 @@ export function describeDocument(doc: ArchiveDocument, timeZone: string): Archiv
     amount = formatAmount(doc.amountMinor, doc.currency);
   }
   const day = formatDayShort(documentDay(doc, timeZone));
+  let detail = `${kind} ${SOURCE_PHRASES[doc.source]}, ${day}`;
+  if (doc.purchasedItem !== null) {
+    detail = `${detail} · ${doc.purchasedItem}`;
+  }
   return {
     id: doc.id,
     source: doc.source,
     title,
-    detail: `${kind} ${SOURCE_PHRASES[doc.source]}, ${day}`,
+    detail,
     amount,
   };
 }

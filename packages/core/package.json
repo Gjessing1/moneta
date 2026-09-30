@@ -17,6 +17,10 @@
       "types": "./dist/document.d.ts",
       "default": "./dist/document.js"
     },
+    "./document-edit": {
+      "types": "./dist/document-edit.d.ts",
+      "default": "./dist/document-edit.js"
+    },
     "./document-list": {
       "types": "./dist/document-list.d.ts",
       "default": "./dist/document-list.js"

@@ -41,4 +41,28 @@ describe('migrate', () => {
       known: MIGRATIONS.length,
     });
   });
+
+  it('adds the purchase field to an existing archive without losing its documents', () => {
+    const db = openDatabase(':memory:');
+    db.exec(MIGRATIONS[0] as string);
+    db.exec(MIGRATIONS[1] as string);
+    db.pragma('user_version = 2');
+    db.prepare(
+      `INSERT INTO documents
+      (id, source, kind, captured_at, created_at, updated_at)
+      VALUES (?, 'camera', 'receipt', ?, ?, ?)`,
+    ).run(
+      '0d6f1c1e-6a3b-4c8e-9a52-2f0c4b1e7a10',
+      '2026-09-29T08:00:00.000Z',
+      '2026-09-29T08:00:00.000Z',
+      '2026-09-29T08:00:00.000Z',
+    );
+
+    expect(migrate(db)).toEqual({ from: 2, to: MIGRATIONS.length, known: MIGRATIONS.length });
+    expect(db.prepare('SELECT kind, purchased_item FROM documents').get()).toEqual({
+      kind: 'receipt',
+      purchased_item: null,
+    });
+    db.close();
+  });
 });

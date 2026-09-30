@@ -11,6 +11,7 @@ function invoice(overrides: Partial<ArchiveDocument> = {}): ArchiveDocument {
     source: 'maily',
     kind: 'invoice',
     merchant: 'Hafslund',
+    purchasedItem: null,
     amountMinor: 149950,
     currency: 'NOK',
     issuedOn: '2026-09-01',
@@ -34,6 +35,7 @@ describe('parseDocumentPatch', () => {
   it('accepts any subset of the editable fields', () => {
     const result = parseDocumentPatch({
       merchant: '  Kiwi Majorstuen ',
+      purchasedItem: '  Headphones ',
       amountMinor: 4990,
       currency: 'nok',
       issuedOn: '2026-09-28',
@@ -43,6 +45,7 @@ describe('parseDocumentPatch', () => {
       ok: true,
       value: {
         merchant: 'Kiwi Majorstuen',
+        purchasedItem: 'Headphones',
         amountMinor: 4990,
         currency: 'NOK',
         issuedOn: '2026-09-28',
@@ -73,6 +76,7 @@ describe('parseDocumentPatch', () => {
     expect(parseDocumentPatch({ kind: 'bill' })).toMatchObject({ ok: false });
     expect(parseDocumentPatch({ notes: null })).toMatchObject({ ok: false });
     expect(parseDocumentPatch({ merchant: 'x'.repeat(501) })).toMatchObject({ ok: false });
+    expect(parseDocumentPatch({ purchasedItem: 'x'.repeat(501) })).toMatchObject({ ok: false });
     expect(parseDocumentPatch([])).toMatchObject({ ok: false });
     expect(parseDocumentPatch(null)).toMatchObject({ ok: false });
   });

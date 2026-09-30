@@ -18,6 +18,8 @@ export interface DocumentListCursor {
 export interface DocumentListQuery {
   kind: DocumentKind | null;
   source: DocumentSource | null;
+  // A simple text lookup until full document-text search is added.
+  q: string | null;
   // true lists only soft-deleted documents (Recently deleted); false hides them.
   deleted: boolean;
   limit: number;
@@ -66,6 +68,7 @@ export function parseDocumentListQuery(
   const query: DocumentListQuery = {
     kind: null,
     source: null,
+    q: null,
     deleted: false,
     limit: DEFAULT_PAGE_SIZE,
     after: null,
@@ -84,6 +87,12 @@ export function parseDocumentListQuery(
         return { ok: false, error: 'source must be maily, camera, upload or share' };
       }
       query.source = value;
+    } else if (key === 'q') {
+      const text = value.trim();
+      if (text.length > 200) {
+        return { ok: false, error: 'q must be at most 200 characters' };
+      }
+      query.q = text === '' ? null : text;
     } else if (key === 'deleted') {
       if (value !== 'true' && value !== 'false') {
         return { ok: false, error: 'deleted must be true or false' };

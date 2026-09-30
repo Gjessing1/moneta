@@ -31,9 +31,6 @@ Nothing here is visible to users. It fixes the decisions everything else builds 
 
 ## 2. Core archive: the smallest version worth using daily (web)
 
-- [ ] Edit details: one form for every field, plus an optional "what you bought" field (searchable,
-      shown in the Warranty view). Fields read from mail or OCR carry a marker until saved (the
-      `guessed` list).
 - [ ] Delete and restore: delete from the document (with a confirmation) or from a multi-select,
       then an undo bar. Settings › Recently deleted lists them with Restore and "Delete now"; they
       are purged after 30 days. A deleted maily document is never imported again. The purge job
@@ -79,9 +76,9 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
 
 ## 4. Find
 
-- [ ] Search: one box (bottom of the screen on the phone) across merchant, what was bought, notes, amounts ("499", "499,50"), dates ("mars 2026") and the
-      document text (the PDF text layer, maily's body text, OCR text once section 5 lands). Uses
-      SQLite FTS5; results arrive while typing.
+- [ ] Expand search: the existing box finds merchant, what was bought and notes. Add amounts
+      ("499", "499,50"), dates ("mars 2026") and document text (the PDF text layer, maily's body
+      text, OCR text once section 5 lands). Move lookup to SQLite FTS5; results arrive while typing.
 - [ ] Filters: kind, source, shop, date range and amount range, as chips above the search box.
       Filters are stored in the URL, so a filtered view can be bookmarked or shared to the app.
 - [ ] Shops view: every merchant with its document count and latest date, most used first, then A
