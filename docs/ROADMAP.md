@@ -21,14 +21,6 @@ Unsorted ideas and bugs. Triage them into a section below.
 
 ---
 
-## 1. Foundation: storage and the maily contract
-
-Nothing here is visible to users. It fixes the decisions everything else builds on.
-
-- [~] Nightly backups of `/home/gjessing/data/moneta`. `scripts/backup-database.sh` and the steps
-      are in DEPLOYMENT.md › Backups. Left: the Backrest mount, plan and hook (root), then one run
-      checked with `restic-search.sh`. Must be done before the first real document is stored.
-
 ## 2. Core archive: the smallest version worth using daily (web)
 
 - [ ] Delete and restore: delete from the document (with a confirmation) or from a multi-select,
