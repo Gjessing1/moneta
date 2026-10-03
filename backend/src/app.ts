@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import type { HealthReport } from '@moneta/core';
 import type { Config } from './config.js';
 import type { Db } from './db/database.js';
+import { registerAppReleaseRoutes } from './routes/app-release.js';
 import { registerDocumentFileRoutes } from './routes/document-files.js';
 import { registerDocumentRoutes } from './routes/documents.js';
 import { schedulePurge } from './purge.js';
@@ -20,6 +21,7 @@ export async function buildApp(config: Config, db: Db) {
   registerDocumentFileRoutes(app, db, config.dataDir, config.mailyPublicUrl);
   schedulePurge(app, db, config.dataDir);
   registerImportStatusRoute(app, db);
+  registerAppReleaseRoutes(app, config.dataDir);
 
   if (existsSync(config.webRoot)) {
     await app.register(fastifyStatic, { root: config.webRoot });

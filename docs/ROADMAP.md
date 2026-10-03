@@ -37,13 +37,12 @@ on both surfaces from the start. See [ANDROID.md](ANDROID.md).
       passkey) login in the APK and check the session survives an app restart.
 - [ ] Caddy: exempt the PWA assets and `/api/app/{version,download}` from SSO (A11). This edits
       shared host infrastructure, so ask first, then reload Caddy.
-- [ ] Release pipeline: keystore at `~/.config/moneta/keystore.env`, `/api/app/version` and
-      `/api/app/download` served from `MONETA_DATA_DIR/app/`, and `scripts/release-android.sh`
-      modelled on nodecal's (build signed → publish → check live version → download → compare
-      SHA-256). Settings › Updates shows the web version and the APK version, an Update button when a
-      newer APK is published, and "Check for updates"; the web app also notices a newer deploy
-      (`/api/health` gitSha) and offers a reload. In a normal browser Settings links to the APK
-      download instead.
+- [~] Release pipeline: `scripts/release-android.sh` (signed with `~/.config/moneta/keystore.env`),
+      `/api/app/version` and `/api/app/download` from `MONETA_DATA_DIR/app/`, and the homepage
+      "Android Downloads" link work. Left: Settings › Updates shows the web version and the APK
+      version, an Update button when a newer APK is published, and "Check for updates"; the web app
+      also notices a newer deploy (`/api/health` gitSha) and offers a reload. In a normal browser
+      Settings links to the APK download instead.
 - [ ] Share target: "Share → Moneta" for PDFs and images from any app (one or many files) lands in
       the capture flow, pre-filled with the file name. Native code only hands over bytes (A11).
 - [ ] Launcher shortcut: long-press the icon → "Capture receipt", which opens straight into the

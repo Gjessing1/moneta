@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Release signing comes from ~/.config/moneta/keystore.env (android/build-apk.sh sources it), so
+// no key material is ever in the repo. Without it assembleRelease produces an unsigned APK, which
+// scripts/publish-android.sh refuses to publish.
+def releaseKeystore = System.getenv('MONETA_KEYSTORE_FILE')
+def releaseStorePassword = System.getenv('MONETA_KEYSTORE_PASSWORD')
+def releaseKeyAlias = System.getenv('MONETA_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('MONETA_KEY_PASSWORD')
+def hasReleaseSigning = releaseKeystore && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+
 android {
     namespace = "io.gjessing.moneta"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,7 +17,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "0.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +25,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseKeystore)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
