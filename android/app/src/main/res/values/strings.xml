@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Moneta</string>
+    <string name="title_activity_main">Moneta</string>
+    <string name="package_name">io.gjessing.moneta</string>
+    <string name="custom_url_scheme">io.gjessing.moneta</string>
+    <string name="server_setup_title">Connect to Moneta</string>
+    <string name="server_setup_help">Enter the public HTTPS address of your Moneta server.</string>
+    <string name="server_url_error">Enter a root HTTPS URL without a path, query, or fragment.</string>
+    <string name="connect">Connect</string>
+    <string name="server_unavailable_title">Server unavailable</string>
+    <string name="server_unavailable_message">Moneta could not load %1$s. Check the connection or choose a different server.</string>
+    <string name="retry">Retry</string>
+    <string name="change_server">Change server</string>
+</resources>

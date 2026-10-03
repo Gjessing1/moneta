@@ -42,6 +42,16 @@ function historyDepth(): number {
   return 0;
 }
 
+// The shell asks before using WebView history, which may contain SSO redirects.
+// Browser navigation keeps using the same depth marker.
+Object.assign(window, {
+  monetaBack() {
+    if (historyDepth() === 0) return false;
+    window.history.back();
+    return true;
+  },
+});
+
 export function navigate(route: Route, options: { replace?: boolean } = {}): void {
   const path = routePath(route);
   if (options.replace) {

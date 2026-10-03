@@ -21,12 +21,17 @@
     "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "format": "prettier --write . --cache",
     "format:check": "prettier --check . --cache",
-    "gate": "node scripts/gate.mjs"
+    "gate": "node scripts/gate.mjs",
+    "android:sync": "cap sync android",
+    "android:build:debug": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.0",
     "concurrently": "^10.0.5",

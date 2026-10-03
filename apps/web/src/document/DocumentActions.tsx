@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { StoredFileView } from '@moneta/core/document-view';
 import { DownloadIcon, SendOnIcon } from '../icons';
+import { isAndroidShell, shareNativeFiles } from '../native';
 
 // Download the originals, or hand them to another app through the system share
 // sheet (mail them to the accountant, drop them in a chat).
@@ -24,6 +25,18 @@ export function DocumentActions({
     setShareError(null);
     setSharing(true);
     try {
+      if (isAndroidShell()) {
+        await shareNativeFiles(
+          files.map(function nativeFile(file) {
+            return {
+              url: new URL(fileUrl(file.position), window.location.origin).href,
+              name: file.downloadName,
+              type: file.contentType,
+            };
+          }),
+        );
+        return;
+      }
       const shared: File[] = [];
       for (const file of files) {
         const res = await fetch(fileUrl(file.position));
@@ -99,9 +112,11 @@ export function DocumentActions({
   );
 }
 
-// Only where the system can take files: Android's Chrome, not desktop Linux,
-// and not the Android WebView until the shell adds a share bridge.
+// Only where the system can take files: Android's Chrome and the Android shell
+// (its WebView has no navigator.share, so the shell's bridge does it), not
+// desktop Linux.
 function canShareFiles(): boolean {
+  if (isAndroidShell()) return true;
   if (typeof navigator.canShare !== 'function') {
     return false;
   }

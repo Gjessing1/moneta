@@ -1,0 +1,16 @@
+{
+  "appId": "io.gjessing.moneta",
+  "appName": "Moneta",
+  "webDir": "mobile",
+  "android": {
+    "appendUserAgent": "MonetaAndroid/1",
+    "allowMixedContent": false,
+    "resolveServiceWorkerRequests": false
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "style": "LIGHT"
+    }
+  }
+}

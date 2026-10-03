@@ -37,6 +37,9 @@ data/
 
 # --- Android build artifacts (uncomment the block that matches the app) ---
 # Capacitor:  android/app/build/  android/.gradle/  android/local.properties
+android/app/build/
+android/.gradle/
+android/local.properties
 # Expo/RN:    apps/android/android/  apps/android/.expo/  .cxx/
 
 # --- Logs / misc ---

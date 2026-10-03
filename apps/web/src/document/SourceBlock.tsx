@@ -1,6 +1,7 @@
 import type { DocumentSource } from '@moneta/core/document';
 import type { SourceView, StoredFileView } from '@moneta/core/document-view';
 import { DownloadIcon, ExternalIcon, SourceIcon, StoredIcon } from '../icons';
+import { isAndroidShell, openMailyApp } from '../native';
 
 // D5: where the document came from, and that Moneta holds its own copy of the
 // original, so it stays readable whatever happens to the mail.
@@ -50,6 +51,11 @@ export function SourceBlock({
           href={mailUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={function openInMaily(event) {
+            if (!isAndroidShell()) return;
+            event.preventDefault();
+            void openMailyApp(mailUrl);
+          }}
         >
           {origin}
           <span className="source__open">

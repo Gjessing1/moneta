@@ -5,6 +5,7 @@ import {
   type Theme,
   type ThemePreference,
 } from '@moneta/core/theme';
+import { isAndroidShell, paintNativeSystemBars } from './native';
 
 // index.html reads the same key before the first paint, so a reload never
 // flashes the wrong theme. Keep the two in step.
@@ -49,6 +50,11 @@ function applyTheme(theme: Theme): void {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) {
     meta.setAttribute('content', CHROME_COLORS[theme]);
+  }
+  if (isAndroidShell()) {
+    paintNativeSystemBars(theme === 'dark', CHROME_COLORS[theme]).catch(function ignore() {
+      // An older shell without the bridge keeps its launch colours.
+    });
   }
 }
 

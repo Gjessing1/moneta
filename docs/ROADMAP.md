@@ -33,13 +33,8 @@ Unsorted ideas and bugs. Triage them into a section below.
 The shell goes in now, before the list of features grows, so every later item is built and verified
 on both surfaces from the start. See [ANDROID.md](ANDROID.md).
 
-- [ ] Capacitor shell (`android/`, `io.gjessing.moneta`): first-launch server URL prompt, SSO login
-      inside the WebView, back button through web history, system bars/insets, app icon. Check that
-      the search field docked at the bottom rises above the keyboard (the web app sets
-      `interactive-widget=resizes-content`; the activity needs `adjustResize`). Camera
-      capture and upload from section 2 work unchanged inside it. The document screen's Download
-      needs a WebView DownloadListener, and its Share button (hidden where `navigator.canShare` is
-      missing, as in the WebView) needs a share bridge; "Open in maily" should open maily's app.
+- [~] Capacitor shell: built and verified on the emulator. Left: complete a real SSO (Pocket ID
+      passkey) login in the APK and check the session survives an app restart.
 - [ ] Caddy: exempt the PWA assets and `/api/app/{version,download}` from SSO (A11). This edits
       shared host infrastructure, so ask first, then reload Caddy.
 - [ ] Release pipeline: keystore at `~/.config/moneta/keystore.env`, `/api/app/version` and
