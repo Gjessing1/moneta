@@ -4,8 +4,8 @@
 #   scripts/host-setup.sh [--apply-runner]
 #
 # - Creates /home/gjessing/docker/<Category>/<slug>/ with docker-compose.yml + .env
-#   (never overwrites an existing file). Category is $DOCKER_CATEGORY: Media,
-#   Productivity (default) or Infrastructure.
+#   (never overwrites an existing file). Category is $DOCKER_CATEGORY: media,
+#   productivity (default) or infrastructure.
 # - Creates the persistent data dir /home/gjessing/data/<slug>.
 # - Checks the Forgejo runner mounts the deploy dir into jobs (CI's deploy step
 #   needs it). Prints the lines to add; --apply-runner edits runner-config.yml
@@ -17,9 +17,9 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 slug="$(node -p "require('$root/package.json').name")"
 port="$(sed -nE 's/^PORT=([0-9]+)$/\1/p' "$root/.env.example")"
-deploy_dir="$HOME/docker/${DOCKER_CATEGORY:-Productivity}/$slug"
+deploy_dir="$HOME/docker/${DOCKER_CATEGORY:-productivity}/$slug"
 data_dir="$HOME/data/$slug"
-runner_config="$HOME/docker/Infrastructure/forgejo/runner-config.yml"
+runner_config="$HOME/docker/infrastructure/forgejo/runner-config.yml"
 apply_runner=false
 [[ "${1:-}" == "--apply-runner" ]] && apply_runner=true
 
@@ -49,21 +49,21 @@ elif $apply_runner; then
   backup="$runner_config.bak-$slug-$(date +%Y%m%d)"
   cp "$runner_config" "$backup"
   sed -i -E "s#^(  options: .*)\$#\1 -v $deploy_dir:$deploy_dir#" "$runner_config"
-  sed -i -E "s#^(    - /home/gjessing/docker/Infrastructure/forgejo/npm-cache)\$#\1\n    - $deploy_dir#" "$runner_config"
+  sed -i -E "s#^(    - /home/gjessing/docker/infrastructure/forgejo/npm-cache)\$#\1\n    - $deploy_dir#" "$runner_config"
   echo "   edited (backup: $backup); restarting runner"
-  (cd "$HOME/docker/Infrastructure/forgejo" && docker compose restart runner)
+  (cd "$HOME/docker/infrastructure/forgejo" && docker compose restart runner)
 else
   cat <<EOF
    NOT mounted — CI's deploy step will fail until it is. In $runner_config:
      container.options:  append  -v $deploy_dir:$deploy_dir
      container.valid_volumes:    - $deploy_dir
-   then: cd ~/docker/Infrastructure/forgejo && docker compose restart runner
+   then: cd ~/docker/infrastructure/forgejo && docker compose restart runner
    (or re-run this script with --apply-runner)
 EOF
 fi
 
 cat <<EOF
-== caddy (add by hand to ~/docker/Infrastructure/caddy/Caddyfile, then reload caddy)
+== caddy (add by hand to ~/docker/infrastructure/caddy/Caddyfile, then reload caddy)
    http://$slug.gjessing.io {
        import proxy $port
    }

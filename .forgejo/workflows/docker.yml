@@ -14,7 +14,7 @@
 #   second turn and gets auto-cancelled if another commit lands meanwhile —
 #   silently skipping the deploy while the run shows green.
 # - DEPLOY_DIR must be bind-mounted into jobs by the runner
-#   (/home/gjessing/docker/Infrastructure/forgejo/runner-config.yml: container.options +
+#   (/home/gjessing/docker/infrastructure/forgejo/runner-config.yml: container.options +
 #   valid_volumes). scripts/host-setup.sh prints the exact lines.
 name: docker
 
@@ -40,7 +40,7 @@ jobs:
       packages: write # not sufficient alone on this instance; push uses REGISTRY_TOKEN
     env:
       DOCKER_BUILDKIT: '1' # required for the Dockerfile's RUN --mount=type=cache
-      DEPLOY_DIR: /home/gjessing/docker/Productivity/moneta
+      DEPLOY_DIR: /home/gjessing/docker/productivity/moneta
     steps:
       - uses: actions/checkout@v4
 
